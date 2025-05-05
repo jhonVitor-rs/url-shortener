@@ -1,13 +1,11 @@
 -- Write your migrate up statements here
-CREATE TABLE IF NOT EXISTS short_urls (
+CREATE TABLE IF NOT EXISTS users (
   "id" uuid PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),
-  "slug" TEXT UNIQUE NOT NULL,
-  "original_url" TEXT NOT NULL,
-  "created_at" TIMESTAMP DEFAULT NOW(),
-  "expires_at" TIMESTAMP,
-  "access_count" INTEGER DEFAULT 0
+  "name" VARCHAR(50) NOT NULL,
+  "email" VARCHAR(100) UNIQUE NOT NULL,
+  "created_at" TIMESTAMP DEFAULT NOW()
 );
 ---- create above / drop below ----
-DROP TABLE IF EXISTS short_urls;
+DROP TABLE IF EXISTS users;
 -- Write your migrate down statements here. If this migration is irreversible
 -- Then delete the separator line above.
