@@ -1,14 +1,19 @@
 package api
 
 import (
+	"crypto/rand"
 	"encoding/json"
+	"math/big"
 	"net/http"
 	"net/url"
 
 	"github.com/go-playground/validator"
 )
 
-var validate = validator.New()
+var (
+	validate    = validator.New()
+	lettersRune = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+)
 
 func parseAndValidate[T any](w http.ResponseWriter, r *http.Request) (*T, bool) {
 	var body T
@@ -32,6 +37,21 @@ func validateUrl(w http.ResponseWriter, urlStr string) bool {
 		return false
 	}
 	return true
+}
+
+func createHashSlug(w http.ResponseWriter) (string, bool) {
+	b := make([]rune, 10)
+	for i := range b {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(lettersRune))))
+		if err != nil {
+			http.Error(w, "Failed to create a slug url", http.StatusInternalServerError)
+			return "", false
+		}
+
+		b[i] = lettersRune[num.Int64()]
+	}
+
+	return string(b), true
 }
 
 func sendJSON(w http.ResponseWriter, rawData any) {

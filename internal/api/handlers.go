@@ -10,6 +10,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jhonVitor-rs/url-shortener/internal/store/pgstore"
 )
@@ -167,9 +168,9 @@ func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 // Short URLs handlers-----------------------
 func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request) {
 	type request struct {
-		UserId      uuid.UUID `json:"user_id" validate:"required"`
-		OriginalUrl string    `json:"original_url" validate:"required"`
-		ExpiresAt   time.Time `json:"expires_at"`
+		UserId      uuid.UUID  `json:"user_id" validate:"required"`
+		OriginalUrl string     `json:"original_url" validate:"required"`
+		ExpiresAt   *time.Time `json:"expires_at"`
 	}
 
 	body, ok := parseAndValidate[request](w, r)
@@ -181,27 +182,45 @@ func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	s, _ := short.NewShortener()
-	surl, err := s.CreateShortenedUrl(r.Context(), body.OriginalUrl)
-	if err != nil {
-		slog.Error("Failed to shortener url", "error", err)
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
-		return
+	var expires pgtype.Timestamp
+	if body.ExpiresAt != nil && !body.ExpiresAt.IsZero() {
+		expires = pgtype.Timestamp{Time: *body.ExpiresAt, Valid: true}
+	} else {
+		expires = pgtype.Timestamp{Valid: false}
 	}
 
-	shortUrlId, err := h.q.CreateShortUrl(r.Context(), pgstore.CreateShortUrlParams{
-		UserID:      body.UserId,
-		OriginalUrl: body.OriginalUrl,
-		Slug:        surl.GetUrl(),
-		ExpiresAt:   pgtype.Timestamp{Time: body.ExpiresAt, Valid: !body.ExpiresAt.IsZero()},
-	})
-	if err != nil {
-		slog.Error("failed to insert a short url", slog.Any("err", err))
-		http.Error(w, "something went wrong", http.StatusInternalServerError)
+	h.saveNewShortUrl(w, r, body.UserId, body.OriginalUrl, expires)
+}
+
+func (h apiHandler) saveNewShortUrl(w http.ResponseWriter, r *http.Request, userId uuid.UUID, originalUrl string, expiresAt pgtype.Timestamp) {
+	for range 5 {
+		slug, ok := createHashSlug(w)
+		if !ok {
+			return
+		}
+
+		h.mu.Lock()
+		shortUrlId, err := h.q.CreateShortUrl(r.Context(), pgstore.CreateShortUrlParams{
+			UserID:      userId,
+			Slug:        slug,
+			OriginalUrl: originalUrl,
+			ExpiresAt:   expiresAt,
+		})
+		h.mu.Unlock()
+
+		if err == nil {
+			sendJSON(w, response{ID: shortUrlId.String()})
+		}
+
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgErr.Code == "23505" && pgErr.ConstraintName == "short_urls_slug_key" {
+			continue
+		}
+
+		slog.Error("Failed to create short url", "error", err)
+		http.Error(w, "someting went wrong", http.StatusInternalServerError)
 		return
 	}
-
-	sendJSON(w, response{ID: shortUrlId.String()})
+	http.Error(w, "could not generate unique slug", http.StatusInternalServerError)
 }
 
 func (h apiHandler) handleGetShortUrlsByUser(w http.ResponseWriter, r *http.Request) {
