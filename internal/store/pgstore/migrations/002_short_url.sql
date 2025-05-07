@@ -4,10 +4,12 @@ CREATE TABLE IF NOT EXISTS short_urls (
   "user_id" uuid NOT NULL,
   "slug" TEXT UNIQUE NOT NULL,
   "original_url" TEXT NOT NULL,
-  "created_at" TIMESTAMP DEFAULT NOW(),
-  "expires_at" TIMESTAMP,
+  "created_at" TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  "expires_at" TIMESTAMP WITH TIME ZONE,
   "access_count" INTEGER DEFAULT 0,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (user_id) REFERENCES users(id) ON
+  DELETE
+    CASCADE
 );
 ---- create above / drop below ----
 DROP TABLE IF EXISTS short_urls;

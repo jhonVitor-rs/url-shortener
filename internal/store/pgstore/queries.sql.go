@@ -20,10 +20,10 @@ VALUES
 `
 
 type CreateShortUrlParams struct {
-	UserID      uuid.UUID
-	Slug        string
-	OriginalUrl string
-	ExpiresAt   pgtype.Timestamp
+	UserID      uuid.UUID          `json:"user_id"`
+	Slug        string             `json:"slug"`
+	OriginalUrl string             `json:"original_url"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
 }
 
 func (q *Queries) CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) (uuid.UUID, error) {
@@ -33,6 +33,25 @@ func (q *Queries) CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) 
 		arg.OriginalUrl,
 		arg.ExpiresAt,
 	)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createtUser = `-- name: CreatetUser :one
+INSERT INTO
+  users (NAME, email)
+VALUES
+  ($1, $2) RETURNING id
+`
+
+type CreatetUserParams struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
+func (q *Queries) CreatetUser(ctx context.Context, arg CreatetUserParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createtUser, arg.Name, arg.Email)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
@@ -231,32 +250,13 @@ WHERE
 `
 
 type IncrementAccessCountParams struct {
-	ID          uuid.UUID
-	AccessCount pgtype.Int4
+	ID          uuid.UUID   `json:"id"`
+	AccessCount pgtype.Int4 `json:"access_count"`
 }
 
 func (q *Queries) IncrementAccessCount(ctx context.Context, arg IncrementAccessCountParams) error {
 	_, err := q.db.Exec(ctx, incrementAccessCount, arg.ID, arg.AccessCount)
 	return err
-}
-
-const insertUser = `-- name: InsertUser :one
-INSERT INTO
-  users (NAME, email)
-VALUES
-  ($1, $2) RETURNING id
-`
-
-type InsertUserParams struct {
-	Name  string
-	Email string
-}
-
-func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, insertUser, arg.Name, arg.Email)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
 }
 
 const updateShortUrl = `-- name: UpdateShortUrl :one
@@ -271,10 +271,10 @@ WHERE
 `
 
 type UpdateShortUrlParams struct {
-	ID          uuid.UUID
-	Slug        string
-	OriginalUrl string
-	ExpiresAt   pgtype.Timestamp
+	ID          uuid.UUID          `json:"id"`
+	Slug        string             `json:"slug"`
+	OriginalUrl string             `json:"original_url"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
 }
 
 func (q *Queries) UpdateShortUrl(ctx context.Context, arg UpdateShortUrlParams) (uuid.UUID, error) {
@@ -293,16 +293,16 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE
   users
 SET
-  name = $2,
+  NAME = $2,
   email = $3
 WHERE
   id = $1 RETURNING id
 `
 
 type UpdateUserParams struct {
-	ID    uuid.UUID
-	Name  string
-	Email string
+	ID    uuid.UUID `json:"id"`
+	Name  string    `json:"name"`
+	Email string    `json:"email"`
 }
 
 func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {

@@ -10,18 +10,18 @@ import (
 )
 
 type ShortUrl struct {
-	ID          uuid.UUID
-	UserID      uuid.UUID
-	Slug        string
-	OriginalUrl string
-	CreatedAt   pgtype.Timestamp
-	ExpiresAt   pgtype.Timestamp
-	AccessCount pgtype.Int4
+	ID          uuid.UUID          `json:"id"`
+	UserID      uuid.UUID          `json:"user_id"`
+	Slug        string             `json:"slug"`
+	OriginalUrl string             `json:"original_url"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	AccessCount pgtype.Int4        `json:"access_count"`
 }
 
 type User struct {
-	ID        uuid.UUID
-	Name      string
-	Email     string
-	CreatedAt pgtype.Timestamp
+	ID        uuid.UUID          `json:"id"`
+	Name      string             `json:"name"`
+	Email     string             `json:"email"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }

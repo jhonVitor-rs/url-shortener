@@ -17,7 +17,7 @@ FROM
   users
 WHERE
   email = $1;
--- name: InsertUser :one
+-- name: CreatetUser :one
 INSERT INTO
   users (NAME, email)
 VALUES
@@ -26,7 +26,7 @@ VALUES
 UPDATE
   users
 SET
-  name = $2,
+  NAME = $2,
   email = $3
 WHERE
   id = $1 RETURNING id;
