@@ -12,7 +12,7 @@ import (
 
 type Querier interface {
 	CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) (uuid.UUID, error)
-	CreatetUser(ctx context.Context, arg CreatetUserParams) (uuid.UUID, error)
+	CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error)
 	DeleteShortUrl(ctx context.Context, id uuid.UUID) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetShortUrlById(ctx context.Context, id uuid.UUID) (ShortUrl, error)

@@ -10,8 +10,8 @@ import (
 	"os/signal"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jhonVitor-rs/url-shortener/internal/api"
-	"github.com/jhonVitor-rs/url-shortener/internal/store/pgstore"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/api"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
 	"github.com/joho/godotenv"
 )
 
@@ -42,7 +42,7 @@ func main() {
 		panic(err)
 	}
 
-	handler := api.NewHandler(pgstore.New(pool))
+	handler := api.NewApiHandler(pgstore.New(pool))
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",

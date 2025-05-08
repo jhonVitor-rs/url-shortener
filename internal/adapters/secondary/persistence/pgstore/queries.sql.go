@@ -38,20 +38,20 @@ func (q *Queries) CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) 
 	return id, err
 }
 
-const createtUser = `-- name: CreatetUser :one
+const createUser = `-- name: CreatetUser :one
 INSERT INTO
   users (NAME, email)
 VALUES
   ($1, $2) RETURNING id
 `
 
-type CreatetUserParams struct {
+type CreateUserParams struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 }
 
-func (q *Queries) CreatetUser(ctx context.Context, arg CreatetUserParams) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, createtUser, arg.Name, arg.Email)
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email)
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err

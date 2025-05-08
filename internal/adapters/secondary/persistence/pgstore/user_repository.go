@@ -9,6 +9,7 @@ import (
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/repositories"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
+	wraperrors "github.com/jhonVitor-rs/url-shortener/pkg/wrap_errors"
 )
 
 type userRepository struct {
@@ -21,32 +22,32 @@ func NewUserRepository(q *Queries) repositories.UserRepository {
 	}
 }
 
-func (r *userRepository) Create(ctx context.Context, user *ports.CreateUserInput) (uuid.UUID, error) {
-	params := CreatetUserParams{
+func (r *userRepository) Create(ctx context.Context, user *ports.CreateUserInput) (string, error) {
+	params := CreateUserParams{
 		Name:  user.Name,
 		Email: user.Email,
 	}
 
-	userId, err := r.q.CreatetUser(ctx, params)
+	userId, err := r.q.CreateUser(ctx, params)
 	if err != nil {
-		return uuid.Nil, err
+		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
-	return userId, nil
+	return userId.String(), nil
 }
 
 func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
 	userId, err := uuid.Parse(id)
 	if err != nil {
-		return nil, err
+		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
 	dbUser, err := r.q.GetUser(ctx, userId)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("User not found")
+			return nil, wraperrors.NotFoundErr("User not fund")
 		}
-		return nil, err
+		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
 	return &models.User{
@@ -61,9 +62,9 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	dbUser, err := r.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, errors.New("User not found")
+			return nil, wraperrors.NotFoundErr("User not fund")
 		}
-		return nil, err
+		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
 	return &models.User{
@@ -74,10 +75,10 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	}, nil
 }
 
-func (r *userRepository) Update(ctx context.Context, user *ports.UpdateUserInput) (uuid.UUID, error) {
+func (r *userRepository) Update(ctx context.Context, user *ports.UpdateUserInput) (string, error) {
 	userId, err := uuid.Parse(user.ID)
 	if err != nil {
-		return uuid.Nil, err
+		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
 	params := UpdateUserParams{
@@ -86,16 +87,16 @@ func (r *userRepository) Update(ctx context.Context, user *ports.UpdateUserInput
 		Email: *user.Email,
 	}
 	if _, err := r.q.UpdateUser(ctx, params); err != nil {
-		return uuid.Nil, err
+		return "", err
 	}
 
-	return userId, nil
+	return userId.String(), nil
 }
 
 func (r *userRepository) Delete(ctx context.Context, id string) error {
 	userId, err := uuid.Parse(id)
 	if err != nil {
-		return err
+		return wraperrors.ValidationErr("user not found")
 	}
 
 	return r.q.DeleteUser(ctx, userId)
@@ -104,7 +105,7 @@ func (r *userRepository) Delete(ctx context.Context, id string) error {
 func (r *userRepository) List(ctx context.Context) ([]*models.User, error) {
 	users, err := r.q.GetUsers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
 	if users == nil {

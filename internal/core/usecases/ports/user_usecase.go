@@ -17,6 +17,10 @@ type UpdateUserInput struct {
 	Email *string `json:"email" validate:"email"`
 }
 
+type GetUserByEmailInput struct {
+	Email string `json:"string" validate:"required, email"`
+}
+
 type UserUseCase interface {
 	CreateUser(ctx context.Context, input *CreateUserInput) (string, error)
 	GetUser(ctx context.Context, id string) (*models.User, error)

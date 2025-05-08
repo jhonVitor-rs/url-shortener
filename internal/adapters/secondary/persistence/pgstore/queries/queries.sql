@@ -17,7 +17,7 @@ FROM
   users
 WHERE
   email = $1;
--- name: CreatetUser :one
+-- name: CreateUser :one
 INSERT INTO
   users (NAME, email)
 VALUES
