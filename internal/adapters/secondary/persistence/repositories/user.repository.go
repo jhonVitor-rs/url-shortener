@@ -1,4 +1,4 @@
-package pgstore
+package repositories
 
 import (
 	"context"
@@ -6,29 +6,24 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/repositories"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
 	wraperrors "github.com/jhonVitor-rs/url-shortener/pkg/wrap_errors"
 )
 
 type userRepository struct {
-	q *Queries
+	q *pgstore.Queries
 }
 
-func NewUserRepository(q *Queries) repositories.UserRepository {
+func NewUserRepository(q *pgstore.Queries) repositories.UserRepository {
 	return &userRepository{
 		q: q,
 	}
 }
 
-func (r *userRepository) Create(ctx context.Context, user *ports.CreateUserInput) (string, error) {
-	params := CreateUserParams{
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	userId, err := r.q.CreateUser(ctx, params)
+func (r *userRepository) Create(ctx context.Context, params *pgstore.CreateUserParams) (string, error) {
+	userId, err := r.q.CreateUser(ctx, *params)
 	if err != nil {
 		return "", wraperrors.InternalErr("something went wrong", err)
 	}
@@ -36,13 +31,8 @@ func (r *userRepository) Create(ctx context.Context, user *ports.CreateUserInput
 	return userId.String(), nil
 }
 
-func (r *userRepository) GetByID(ctx context.Context, id string) (*models.User, error) {
-	userId, err := uuid.Parse(id)
-	if err != nil {
-		return nil, wraperrors.InternalErr("something went wrong", err)
-	}
-
-	dbUser, err := r.q.GetUser(ctx, userId)
+func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	dbUser, err := r.q.GetUser(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, wraperrors.NotFoundErr("User not fund")
@@ -75,31 +65,16 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	}, nil
 }
 
-func (r *userRepository) Update(ctx context.Context, user *ports.UpdateUserInput) (string, error) {
-	userId, err := uuid.Parse(user.ID)
-	if err != nil {
+func (r *userRepository) Update(ctx context.Context, params *pgstore.UpdateUserParams) (string, error) {
+	if _, err := r.q.UpdateUser(ctx, *params); err != nil {
 		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
-	params := UpdateUserParams{
-		ID:    userId,
-		Name:  *user.Name,
-		Email: *user.Email,
-	}
-	if _, err := r.q.UpdateUser(ctx, params); err != nil {
-		return "", err
-	}
-
-	return userId.String(), nil
+	return params.ID.String(), nil
 }
 
-func (r *userRepository) Delete(ctx context.Context, id string) error {
-	userId, err := uuid.Parse(id)
-	if err != nil {
-		return wraperrors.ValidationErr("user not found")
-	}
-
-	return r.q.DeleteUser(ctx, userId)
+func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	return r.q.DeleteUser(ctx, id)
 }
 
 func (r *userRepository) List(ctx context.Context) ([]*models.User, error) {
@@ -109,7 +84,7 @@ func (r *userRepository) List(ctx context.Context) ([]*models.User, error) {
 	}
 
 	if users == nil {
-		users = []User{}
+		users = []pgstore.User{}
 	}
 
 	var userPointers []*models.User

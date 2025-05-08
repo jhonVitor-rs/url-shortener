@@ -62,12 +62,13 @@ func (h apiHandler) handleGetUserByEmail(w http.ResponseWriter, r *http.Request)
 }
 
 func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
+	userId := chi.URLParam(r, "user_id")
 	body, ok := utils.ParseAndValidate[ports.UpdateUserInput](w, r)
 	if !ok {
 		return
 	}
 
-	userId, err := h.user.UpdateUser(r.Context(), body)
+	userId, err := h.user.UpdateUser(r.Context(), userId, body)
 	if err != nil {
 		utils.SendErrors(w, err)
 		return
@@ -84,4 +85,86 @@ func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	utils.SendJSON(w, "User deleted with success")
+}
+
+// Short URL handlers -----------------------------------------------
+func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request) {
+	body, ok := utils.ParseAndValidate[ports.CreateShortUrlInput](w, r)
+	if !ok {
+		return
+	}
+
+	if ok = utils.ValidateUrl(w, body.OriginalUrl); !ok {
+		return
+	}
+
+	shortUrlId, err := h.shortUrl.CreateShortUrl(r.Context(), body)
+	if err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	utils.SendJSON(w, models.Response{ID: shortUrlId})
+}
+
+func (h apiHandler) handleListShortUrlsByUser(w http.ResponseWriter, r *http.Request) {
+	userId := chi.URLParam(r, "user_id")
+
+	shortUrls, err := h.shortUrl.ListShortUrl(r.Context(), userId)
+	if err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	utils.SendJSON(w, shortUrls)
+}
+
+func (h apiHandler) handleGetShortUrl(w http.ResponseWriter, r *http.Request) {
+	shortUrlId := chi.URLParam(r, "short_url_id")
+
+	shortUrl, err := h.shortUrl.GetShortUrl(r.Context(), shortUrlId)
+	if err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	utils.SendJSON(w, shortUrl)
+}
+
+func (h apiHandler) handleRedirect(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+
+	shortUrl, err := h.shortUrl.GetShortUrlBySlug(r.Context(), slug)
+	if err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	http.Redirect(w, r, shortUrl.OriginalUrl, http.StatusFound)
+}
+
+func (h apiHandler) handleUpdateShortUrl(w http.ResponseWriter, r *http.Request) {
+	shortUrlId := chi.URLParam(r, "short_url_id")
+	body, ok := utils.ParseAndValidate[ports.UpdateShortUrlInput](w, r)
+	if !ok {
+		return
+	}
+
+	shortUrlId, err := h.shortUrl.UpdateShortUrl(r.Context(), shortUrlId, body)
+	if err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	utils.SendJSON(w, models.Response{ID: shortUrlId})
+}
+
+func (h apiHandler) handleDeleteShortUrl(w http.ResponseWriter, r *http.Request) {
+	shortUrlId := chi.URLParam(r, "short_url_id")
+	if err := h.shortUrl.DeleteShortUrl(r.Context(), shortUrlId); err != nil {
+		utils.SendErrors(w, err)
+		return
+	}
+
+	utils.SendJSON(w, "Short URL has deleted with success")
 }

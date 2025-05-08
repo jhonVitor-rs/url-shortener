@@ -1,6 +1,10 @@
 package wraperrors
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/jackc/pgx/v5/pgconn"
+)
 
 const (
 	NotFound         = "NOT_FOUND"
@@ -28,6 +32,14 @@ func (e *AppError) Unwrap() error {
 
 func (e *AppError) Is(target error) bool {
 	return errors.Is(e, target)
+}
+
+func IsUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }
 
 func New(message, errorType string, code int, err error) *AppError {

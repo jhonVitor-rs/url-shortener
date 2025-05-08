@@ -18,7 +18,7 @@ func (h apiHandler) registerRoutes() {
 		MaxAge:           300,
 	}))
 
-	h.r.Route("/", func(r chi.Router) {
+	h.r.Route("/api", func(r chi.Router) {
 		r.Route("/users", func(r chi.Router) {
 			r.Get("/login", h.handleGetUserByEmail)
 
@@ -29,5 +29,16 @@ func (h apiHandler) registerRoutes() {
 			r.Patch("/{user_id}", h.handleUpdateUser)
 			r.Delete("/{user_id}", h.handleDeleteUser)
 		})
+
+		r.Route("/short_url", func(r chi.Router) {
+			r.Get("/{short_url_id}", h.handleGetShortUrl)
+			r.Get("/list/{user_id}", h.handleListShortUrlsByUser)
+
+			r.Post("/", h.handleCreateShortUrl)
+			r.Patch("/{short_url_id}", h.handleUpdateShortUrl)
+			r.Delete("/{short_url_id}", h.handleDeleteShortUrl)
+		})
 	})
+
+	h.r.Get("/redirect/{slug}", h.handleRedirect)
 }

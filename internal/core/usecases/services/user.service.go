@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/repositories"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
@@ -29,26 +31,39 @@ func (s *userService) CreateUser(ctx context.Context, input *ports.CreateUserInp
 		return "", wraperrors.AlreadyExistsErr("email already in use")
 	}
 
-	return s.userRepo.Create(ctx, input)
+	return s.userRepo.Create(ctx, &pgstore.CreateUserParams{
+		Name:  input.Name,
+		Email: input.Email,
+	})
 }
 
 func (s *userService) GetUser(ctx context.Context, id string) (*models.User, error) {
-	return s.userRepo.GetByID(ctx, id)
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		return nil, wraperrors.InternalErr("something went wrong", err)
+	}
+
+	return s.userRepo.GetByID(ctx, userId)
 }
 
 func (s *userService) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	return s.userRepo.GetByEmail(ctx, email)
 }
 
-func (s *userService) UpdateUser(ctx context.Context, input *ports.UpdateUserInput) (string, error) {
-	user, err := s.userRepo.GetByID(ctx, input.ID)
+func (s *userService) UpdateUser(ctx context.Context, id string, input *ports.UpdateUserInput) (string, error) {
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		return "", wraperrors.InternalErr("something went wrong", err)
+	}
+
+	user, err := s.userRepo.GetByID(ctx, userId)
 	if err != nil {
 		return "", wraperrors.NotFoundErr("user not found")
 	}
 
 	if input.Email != nil && *input.Email != user.Email {
 		existingUser, err := s.userRepo.GetByEmail(ctx, *input.Email)
-		if err == nil && existingUser != nil && existingUser.ID != input.ID {
+		if err == nil && existingUser != nil && existingUser.ID != id {
 			return "", wraperrors.AlreadyExistsErr("email already in use by another user")
 		}
 	}
@@ -60,15 +75,20 @@ func (s *userService) UpdateUser(ctx context.Context, input *ports.UpdateUserInp
 		user.Email = *input.Email
 	}
 
-	return s.userRepo.Update(ctx, &ports.UpdateUserInput{
-		ID:    input.ID,
-		Name:  &user.Name,
-		Email: &user.Email,
+	return s.userRepo.Update(ctx, &pgstore.UpdateUserParams{
+		ID:    userId,
+		Name:  user.Name,
+		Email: user.Email,
 	})
 }
 
 func (s *userService) DeleteUser(ctx context.Context, id string) error {
-	return s.userRepo.Delete(ctx, id)
+	userId, err := uuid.Parse(id)
+	if err != nil {
+		return wraperrors.InternalErr("something went wrong", err)
+	}
+
+	return s.userRepo.Delete(ctx, userId)
 }
 
 func (s *userService) ListUsers(ctx context.Context) ([]*models.User, error) {
