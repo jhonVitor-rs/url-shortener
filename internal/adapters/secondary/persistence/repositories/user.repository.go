@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -25,6 +26,7 @@ func NewUserRepository(q *pgstore.Queries) repositories.UserRepository {
 func (r *userRepository) Create(ctx context.Context, params *pgstore.CreateUserParams) (string, error) {
 	userId, err := r.q.CreateUser(ctx, *params)
 	if err != nil {
+		slog.Error("error to database", "error", err)
 		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
@@ -37,6 +39,7 @@ func (r *userRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, wraperrors.NotFoundErr("User not fund")
 		}
+		slog.Error("error to database", "error", err)
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
@@ -54,6 +57,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, wraperrors.NotFoundErr("User not fund")
 		}
+		slog.Error("error to database", "error", err)
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
@@ -67,6 +71,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 func (r *userRepository) Update(ctx context.Context, params *pgstore.UpdateUserParams) (string, error) {
 	if _, err := r.q.UpdateUser(ctx, *params); err != nil {
+		slog.Error("error to database", "error", err)
 		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
@@ -80,6 +85,7 @@ func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
 func (r *userRepository) List(ctx context.Context) ([]*models.User, error) {
 	users, err := r.q.GetUsers(ctx)
 	if err != nil {
+		slog.Error("error to database", "error", err)
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 

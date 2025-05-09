@@ -1,9 +1,11 @@
 package api
 
 import (
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/middlewares"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
 	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
@@ -35,7 +37,11 @@ func (h apiHandler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h apiHandler) handleGetUser(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "user_id")
+	userId, ok := middlewares.GetUserIdFromContex(r.Context())
+	if !ok {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		return
+	}
 
 	user, err := h.user.GetUser(r.Context(), userId)
 	if err != nil {
@@ -58,11 +64,23 @@ func (h apiHandler) handleGetUserByEmail(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	utils.SendJSON(w, user)
+	token, err := middlewares.GenerateJWT(user.ID)
+	if err != nil {
+		slog.Error("Err to generate toke", "error", err)
+		http.Error(w, "something went wrong", http.StatusInternalServerError)
+		return
+	}
+
+	utils.SendJSON(w, models.Token{JWT: token})
 }
 
 func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "user_id")
+	userId, ok := middlewares.GetUserIdFromContex(r.Context())
+	if !ok {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	body, ok := utils.ParseAndValidate[ports.UpdateUserInput](w, r)
 	if !ok {
 		return
@@ -78,7 +96,12 @@ func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "user_id")
+	userId, ok := middlewares.GetUserIdFromContex(r.Context())
+	if !ok {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	if err := h.user.DeleteUser(r.Context(), userId); err != nil {
 		utils.SendErrors(w, err)
 		return
@@ -89,6 +112,12 @@ func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 
 // Short URL handlers -----------------------------------------------
 func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request) {
+	userId, ok := middlewares.GetUserIdFromContex(r.Context())
+	if !ok {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		return
+	}
+
 	body, ok := utils.ParseAndValidate[ports.CreateShortUrlInput](w, r)
 	if !ok {
 		return
@@ -98,7 +127,7 @@ func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	shortUrlId, err := h.shortUrl.CreateShortUrl(r.Context(), body)
+	shortUrlId, err := h.shortUrl.CreateShortUrl(r.Context(), userId, body)
 	if err != nil {
 		utils.SendErrors(w, err)
 		return
@@ -108,7 +137,11 @@ func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request)
 }
 
 func (h apiHandler) handleListShortUrlsByUser(w http.ResponseWriter, r *http.Request) {
-	userId := chi.URLParam(r, "user_id")
+	userId, ok := middlewares.GetUserIdFromContex(r.Context())
+	if !ok {
+		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		return
+	}
 
 	shortUrls, err := h.shortUrl.ListShortUrl(r.Context(), userId)
 	if err != nil {

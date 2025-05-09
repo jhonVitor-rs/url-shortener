@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,13 +59,13 @@ func (r *shortUrlRepository) GetBySlug(ctx context.Context, slug string) (*model
 	dbShortUrl, err := r.q.GetShortUrlBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, wraperrors.NotFoundErr("Short URL not fund")
+			return nil, wraperrors.NotFoundErr(fmt.Sprintf("short URL with slug '%s' not found", slug))
 		}
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
 	if dbShortUrl.ExpiresAt.Valid && time.Now().After(dbShortUrl.ExpiresAt.Time) {
-		return nil, wraperrors.ForbiddenErr("short url expired")
+		return nil, wraperrors.UnauthorizedErr("short url expired")
 	}
 
 	return &models.ShortUrl{

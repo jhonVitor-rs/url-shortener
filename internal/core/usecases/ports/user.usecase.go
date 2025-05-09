@@ -17,7 +17,7 @@ type UpdateUserInput struct {
 }
 
 type GetUserByEmailInput struct {
-	Email string `json:"string" validate:"required, email"`
+	Email string `json:"email" validate:"required,email"`
 }
 
 type UserUseCase interface {

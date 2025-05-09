@@ -2,23 +2,22 @@ package wraperrors
 
 import (
 	"errors"
-
-	"github.com/jackc/pgx/v5/pgconn"
+	"strings"
 )
 
-const (
-	NotFound         = "NOT_FOUND"
-	AlreadyExists    = "ALREADY_EXISTS"
-	ValidationFailed = "VALIDATION_FAILED"
-	Unauthorized     = "UNAUTHORIZED"
-	Forbidden        = "FORBIDDEN"
-	Internal         = "INTERNAL"
+var (
+	ErrNotFound        = errors.New("not found")
+	ErrAlreadyExists   = errors.New("already exists")
+	ErrValidation      = errors.New("validation failed")
+	ErrUnauthorized    = errors.New("unauthorized")
+	ErrInternal        = errors.New("internal error")
+	ErrUniqueViolation = errors.New("unique constraint violation")
 )
 
 type AppError struct {
 	Code    int
 	Message string
-	Type    string
+	Type    error
 	Err     error
 }
 
@@ -31,18 +30,19 @@ func (e *AppError) Unwrap() error {
 }
 
 func (e *AppError) Is(target error) bool {
-	return errors.Is(e, target)
-}
-
-func IsUniqueViolation(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
+	targetErr, ok := target.(*AppError)
+	if !ok {
+		return errors.Is(e.Type, target)
 	}
-	return false
+
+	return errors.Is(e.Type, targetErr.Type)
 }
 
-func New(message, errorType string, code int, err error) *AppError {
+func (e *AppError) As(target any) bool {
+	return errors.As(e, target)
+}
+
+func New(message string, errorType error, code int, err error) *AppError {
 	return &AppError{
 		Code:    code,
 		Type:    errorType,
@@ -52,25 +52,57 @@ func New(message, errorType string, code int, err error) *AppError {
 }
 
 func NotFoundErr(msg string) *AppError {
-	return New(msg, NotFound, 404, nil)
+	return New(msg, ErrNotFound, 404, nil)
 }
 
 func AlreadyExistsErr(msg string) *AppError {
-	return New(msg, AlreadyExists, 409, nil)
+	return New(msg, ErrAlreadyExists, 409, nil)
 }
 
 func ValidationErr(msg string) *AppError {
-	return New(msg, ValidationFailed, 400, nil)
+	return New(msg, ErrValidation, 400, nil)
 }
 
 func UnauthorizedErr(msg string) *AppError {
-	return New(msg, Unauthorized, 401, nil)
-}
-
-func ForbiddenErr(msg string) *AppError {
-	return New(msg, Forbidden, 403, nil)
+	return New(msg, ErrUnauthorized, 401, nil)
 }
 
 func InternalErr(msg string, err error) *AppError {
-	return New(msg, Internal, 500, err)
+	return New(msg, ErrInternal, 500, err)
+}
+
+func UniqueViolationErr(message string) error {
+	return &AppError{
+		Type:    ErrUniqueViolation,
+		Message: message,
+		Err:     errors.New(message),
+	}
+}
+
+func IsNotFoundError(err error) bool {
+	return errors.Is(err, ErrNotFound)
+}
+
+func IsAlreadyExistsError(err error) bool {
+	return errors.Is(err, ErrAlreadyExists)
+}
+
+func IsValidationError(err error) bool {
+	return errors.Is(err, ErrValidation)
+}
+
+func IsUnauthorizedError(err error) bool {
+	return errors.Is(err, ErrUnauthorized)
+}
+
+func IsInternalError(err error) bool {
+	return errors.Is(err, ErrInternal)
+}
+
+func IsUniqueViolation(err error) bool {
+	if errors.Is(err, ErrUniqueViolation) {
+		return true
+	}
+
+	return err != nil && strings.Contains(err.Error(), "unique constraint")
 }
