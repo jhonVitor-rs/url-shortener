@@ -41,7 +41,7 @@ func (s *shortUrlService) CreateShortUrl(ctx context.Context, rawUserId string, 
 		UserID:      userId,
 		Slug:        slug,
 		OriginalUrl: input.OriginalUrl,
-		ExpiresAt:   pgtype.Timestamptz{Time: *input.ExpiresAt, Valid: input.ExpiresAt != nil},
+		ExpiresAt:   pgtype.Timestamptz{Valid: false},
 	})
 }
 
@@ -71,9 +71,6 @@ func (s *shortUrlService) UpdateShortUrl(ctx context.Context, id string, input *
 
 	if input.OriginalUrl != nil {
 		shortUrl.OriginalUrl = *input.OriginalUrl
-	}
-	if input.ExpiresAt != nil {
-		shortUrl.ExpiresAt = input.ExpiresAt
 	}
 
 	newSlug, err := s.genSlug(ctx, 1)

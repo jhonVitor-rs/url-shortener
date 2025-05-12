@@ -1,4 +1,4 @@
-package repositories
+package infra
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/repositories"
 	wraperrors "github.com/jhonVitor-rs/url-shortener/pkg/wrap_errors"
@@ -68,14 +69,18 @@ func (r *shortUrlRepository) GetBySlug(ctx context.Context, slug string) (*model
 		return nil, wraperrors.UnauthorizedErr("short url expired")
 	}
 
-	return &models.ShortUrl{
+	shortUrl := &models.ShortUrl{
 		ID:          dbShortUrl.ID.String(),
 		Slug:        dbShortUrl.Slug,
 		OriginalUrl: dbShortUrl.OriginalUrl,
 		UserID:      dbShortUrl.UserID.String(),
 		ExpiresAt:   &dbShortUrl.ExpiresAt.Time,
 		CreatedAt:   dbShortUrl.CreatedAt.Time,
-	}, nil
+	}
+
+	rdstore.LogRecentAccess(shortUrl)
+
+	return shortUrl, nil
 }
 
 func (r *shortUrlRepository) Update(ctx context.Context, params *pgstore.UpdateShortUrlParams) (string, error) {

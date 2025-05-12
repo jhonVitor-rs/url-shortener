@@ -2,19 +2,16 @@ package ports
 
 import (
 	"context"
-	"time"
 
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 )
 
 type CreateShortUrlInput struct {
-	OriginalUrl string     `json:"original_url" validate:"required"`
-	ExpiresAt   *time.Time `json:"expires_at"`
+	OriginalUrl string `json:"original_url" validate:"required"`
 }
 
 type UpdateShortUrlInput struct {
-	OriginalUrl *string    `json:"original_url"`
-	ExpiresAt   *time.Time `json:"expires_at"`
+	OriginalUrl *string `json:"original_url"`
 }
 
 type ShortUrlUseCase interface {

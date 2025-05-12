@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/infra"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/repositories"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/services"
 )
@@ -27,8 +27,8 @@ func NewApiHandler(q *pgstore.Queries) http.Handler {
 	a := apiHandler{
 		r:        chi.NewRouter(),
 		mu:       &sync.Mutex{},
-		user:     services.NewUserService(repositories.NewUserRepository(q)),
-		shortUrl: services.NewShortUrlService(repositories.NewSHortUrlRepository(q)),
+		user:     services.NewUserService(infra.NewUserRepository(q)),
+		shortUrl: services.NewShortUrlService(infra.NewSHortUrlRepository(q)),
 	}
 	a.registerRoutes()
 

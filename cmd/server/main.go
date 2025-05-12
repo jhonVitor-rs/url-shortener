@@ -8,10 +8,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/api"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
 	"github.com/joho/godotenv"
 )
 
@@ -22,25 +24,11 @@ func main() {
 	}
 
 	ctx := context.Background()
-	pool, err := pgxpool.New(ctx, fmt.Sprintf(
-		"user=%s password=%s host=%s port=%s dbname=%s",
-		os.Getenv("DATABASE_USER"),
-		os.Getenv("DATABASE_PASSWORD"),
-		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_PORT"),
-		os.Getenv("DATABASE_NAME"),
-	))
 
-	if err != nil {
-		slog.Warn("Failed to create pool")
-		panic(err)
-	}
+	pool := setupDatabseConnection(ctx)
 	defer pool.Close()
 
-	if err := pool.Ping(ctx); err != nil {
-		slog.Warn("Failed to ping database")
-		panic(err)
-	}
+	checkRedisConnection(ctx)
 
 	handler := api.NewApiHandler(pgstore.New(pool))
 
@@ -67,5 +55,52 @@ func main() {
 	slog.Info("Shutting down server...")
 	if err := server.Shutdown(ctx); err != nil {
 		slog.Error("Server shutdown error", "error", err)
+	}
+}
+
+func setupDatabseConnection(ctx context.Context) *pgxpool.Pool {
+	connectionSring := fmt.Sprintf(
+		"user=%s password=%s host=%s port=%s dbname=%s",
+		os.Getenv("DATABASE_USER"),
+		os.Getenv("DATABASE_PASSWORD"),
+		os.Getenv("DATABASE_HOST"),
+		os.Getenv("DATABASE_PORT"),
+		os.Getenv("DATABASE_NAME"),
+	)
+
+	config, err := pgxpool.ParseConfig(connectionSring)
+	if err != nil {
+		slog.Warn("Failed to create pool")
+		panic(err)
+	}
+
+	config.MaxConns = 20
+	config.MinConns = 5
+	config.MaxConnLifetime = 30 * time.Minute
+	config.MaxConnIdleTime = 5 * time.Minute
+
+	pool, err := pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		slog.Error("Failed to create database pool", "error", err)
+		panic(err)
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		slog.Error("Failed to ping database", "error", err)
+		panic(err)
+	}
+
+	slog.Info("Database connection established successfully")
+	return pool
+}
+
+func checkRedisConnection(ctx context.Context) {
+	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := rdstore.HealthCheck(checkCtx); err != nil {
+		slog.Warn("Redis connection check failed - cache will be unavailable", "error", err)
+	} else {
+		slog.Info("Redis connection with successfully")
 	}
 }

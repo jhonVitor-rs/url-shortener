@@ -1,4 +1,4 @@
-package repositories
+package infra
 
 import (
 	"context"

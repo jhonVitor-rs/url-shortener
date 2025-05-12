@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/middlewares"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
 	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
@@ -166,6 +167,12 @@ func (h apiHandler) handleGetShortUrl(w http.ResponseWriter, r *http.Request) {
 
 func (h apiHandler) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
+
+	url, err := rdstore.GetUrl(r.Context(), slug)
+	if err != nil {
+		http.Redirect(w, r, url, http.StatusFound)
+		return
+	}
 
 	shortUrl, err := h.shortUrl.GetShortUrlBySlug(r.Context(), slug)
 	if err != nil {
