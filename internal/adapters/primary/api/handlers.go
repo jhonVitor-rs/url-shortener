@@ -168,8 +168,9 @@ func (h apiHandler) handleGetShortUrl(w http.ResponseWriter, r *http.Request) {
 func (h apiHandler) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
 
-	url, err := rdstore.GetUrl(r.Context(), slug)
-	if err != nil {
+	url, err := rdstore.GetUrl(r.Context(), h.rdb, slug)
+	if err == nil {
+		rdstore.IncrementAccess(r.Context(), h.rdb, slug)
 		http.Redirect(w, r, url, http.StatusFound)
 		return
 	}
@@ -180,6 +181,8 @@ func (h apiHandler) handleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rdstore.LogRecentAccess(r.Context(), h.rdb, shortUrl)
+	rdstore.IncrementAccess(r.Context(), h.rdb, slug)
 	http.Redirect(w, r, shortUrl.OriginalUrl, http.StatusFound)
 }
 

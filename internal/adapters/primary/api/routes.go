@@ -40,7 +40,7 @@ func (h apiHandler) registerRoutes() {
 			r.Use(middlewares.JWTAuth)
 
 			r.Get("/{short_url_id}", h.handleGetShortUrl)
-			r.Get("/list/", h.handleListShortUrlsByUser)
+			r.Get("/list", h.handleListShortUrlsByUser)
 
 			r.Post("/", h.handleCreateShortUrl)
 			r.Patch("/{short_url_id}", h.handleUpdateShortUrl)

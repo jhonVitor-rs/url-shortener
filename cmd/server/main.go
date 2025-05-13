@@ -12,9 +12,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/api"
+	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/workers"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -28,9 +30,9 @@ func main() {
 	pool := setupDatabseConnection(ctx)
 	defer pool.Close()
 
-	checkRedisConnection(ctx)
+	rdb := setupRedisConnection(ctx)
 
-	handler := api.NewApiHandler(pgstore.New(pool))
+	handler := api.NewApiHandler(pgstore.New(pool), rdb)
 
 	server := &http.Server{
 		Addr:    "0.0.0.0:8080",
@@ -47,6 +49,8 @@ func main() {
 			slog.Info("Server closed")
 		}
 	}()
+
+	workers.StartHourlyAccessWorker(pgstore.New(pool), rdb)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -94,13 +98,17 @@ func setupDatabseConnection(ctx context.Context) *pgxpool.Pool {
 	return pool
 }
 
-func checkRedisConnection(ctx context.Context) {
+func setupRedisConnection(ctx context.Context) *redis.Client {
+	rdb := rdstore.NewRedisClient()
+
 	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := rdstore.HealthCheck(checkCtx); err != nil {
+	if err := rdstore.HealthCheck(checkCtx, rdb.Client); err != nil {
 		slog.Warn("Redis connection check failed - cache will be unavailable", "error", err)
 	} else {
 		slog.Info("Redis connection with successfully")
 	}
+
+	return rdb.Client
 }

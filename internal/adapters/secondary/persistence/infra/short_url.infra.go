@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/repositories"
 	wraperrors "github.com/jhonVitor-rs/url-shortener/pkg/wrap_errors"
@@ -46,22 +46,32 @@ func (r *shortUrlRepository) GetShortUrl(ctx context.Context, id uuid.UUID) (*mo
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
-	return &models.ShortUrl{
+	shortUrl := &models.ShortUrl{
 		ID:          dbShortUrl.ID.String(),
 		Slug:        dbShortUrl.Slug,
 		OriginalUrl: dbShortUrl.OriginalUrl,
 		UserID:      dbShortUrl.UserID.String(),
-		ExpiresAt:   &dbShortUrl.ExpiresAt.Time,
 		CreatedAt:   dbShortUrl.CreatedAt.Time,
-	}, nil
+		AccessCount: int(dbShortUrl.AccessCount.Int32),
+	}
+
+	if dbShortUrl.ExpiresAt.Valid {
+		shortUrl.ExpiresAt = &dbShortUrl.ExpiresAt.Time
+	} else {
+		shortUrl.ExpiresAt = nil
+	}
+
+	return shortUrl, nil
 }
 
 func (r *shortUrlRepository) GetBySlug(ctx context.Context, slug string) (*models.ShortUrl, error) {
 	dbShortUrl, err := r.q.GetShortUrlBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
+			slog.Error("err no rouws", "error", err)
 			return nil, wraperrors.NotFoundErr(fmt.Sprintf("short URL with slug '%s' not found", slug))
 		}
+		slog.Error("e", "error", err)
 		return nil, wraperrors.InternalErr("something went wrong", err)
 	}
 
@@ -74,11 +84,14 @@ func (r *shortUrlRepository) GetBySlug(ctx context.Context, slug string) (*model
 		Slug:        dbShortUrl.Slug,
 		OriginalUrl: dbShortUrl.OriginalUrl,
 		UserID:      dbShortUrl.UserID.String(),
-		ExpiresAt:   &dbShortUrl.ExpiresAt.Time,
 		CreatedAt:   dbShortUrl.CreatedAt.Time,
 	}
 
-	rdstore.LogRecentAccess(shortUrl)
+	if dbShortUrl.ExpiresAt.Valid {
+		shortUrl.ExpiresAt = &dbShortUrl.ExpiresAt.Time
+	} else {
+		shortUrl.ExpiresAt = nil
+	}
 
 	return shortUrl, nil
 }
@@ -109,7 +122,13 @@ func (r *shortUrlRepository) List(ctx context.Context, userId uuid.UUID) ([]*mod
 			OriginalUrl: shortUrl.OriginalUrl,
 			UserID:      shortUrl.UserID.String(),
 			CreatedAt:   shortUrl.CreatedAt.Time,
-			ExpiresAt:   &shortUrl.ExpiresAt.Time,
+			ExpiresAt: func() *time.Time {
+				if shortUrl.ExpiresAt.Valid {
+					return &shortUrl.ExpiresAt.Time
+				}
+				return nil
+			}(),
+			AccessCount: int(shortUrl.AccessCount.Int32),
 		})
 	}
 

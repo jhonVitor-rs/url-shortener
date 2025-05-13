@@ -96,6 +96,7 @@ func (s *shortUrlService) DeleteShortUrl(ctx context.Context, id string) error {
 }
 
 func (s *shortUrlService) ListShortUrl(ctx context.Context, rawUserId string) ([]*models.ShortUrl, error) {
+	slog.Info("Valor de rawUserId recebido", "rawUserId", rawUserId, "comprimento", len(rawUserId))
 	userId, err := uuid.Parse(rawUserId)
 	if err != nil {
 		return nil, wraperrors.InternalErr("something went wrong", err)

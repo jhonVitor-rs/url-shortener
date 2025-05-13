@@ -17,15 +17,16 @@ const (
 	defaultTTL = 24 * time.Hour
 )
 
-func LogRecentAccess(shortUrl *models.ShortUrl) error {
+func LogRecentAccess(ctx context.Context, rdb *redis.Client, shortUrl *models.ShortUrl) error {
 	go func() {
-		timeoutCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		slog.Info("log recent access started", "slug", shortUrl.Slug)
+		timeoutCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 
 		urlKey := urlPrefix + shortUrl.Slug
 
 		var ttl time.Duration
-		if shortUrl.ExpiresAt != nil {
+		if shortUrl.ExpiresAt != nil && !shortUrl.ExpiresAt.IsZero() {
 			ttl = time.Until(*shortUrl.ExpiresAt)
 			if ttl <= 0 {
 				slog.Debug("url already expired, not caching", "slug", shortUrl.Slug)
@@ -35,18 +36,22 @@ func LogRecentAccess(shortUrl *models.ShortUrl) error {
 			ttl = defaultTTL
 		}
 
-		if err := rdb.Set(timeoutCtx, urlKey, shortUrl.OriginalUrl, ttl).Err(); err != nil {
+		var res string
+		var err error
+		if res, err = rdb.Set(timeoutCtx, urlKey, shortUrl.OriginalUrl, ttl).Result(); err != nil {
 			slog.Error("faled to save url in caceh", "error", err)
 			return
 		}
+		slog.Info("Resposta", "res", res)
 
-		updateListUrls(timeoutCtx, shortUrl.Slug)
+		slog.Info("url cached successfully", "slug", shortUrl.Slug, "ttl", ttl)
+		updateListUrls(timeoutCtx, rdb, shortUrl.Slug)
 	}()
 
 	return nil
 }
 
-func GetUrl(ctx context.Context, slug string) (string, error) {
+func GetUrl(ctx context.Context, rdb *redis.Client, slug string) (string, error) {
 	urlKey := urlPrefix + slug
 
 	url, err := rdb.Get(ctx, urlKey).Result()
@@ -66,13 +71,13 @@ func GetUrl(ctx context.Context, slug string) (string, error) {
 		timeoutCtx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
 
-		updateListUrls(timeoutCtx, slug)
+		updateListUrls(timeoutCtx, rdb, slug)
 	}()
 
 	return url, nil
 }
 
-func HealthCheck(ctx context.Context) error {
+func HealthCheck(ctx context.Context, rdb *redis.Client) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -84,7 +89,8 @@ func HealthCheck(ctx context.Context) error {
 	return nil
 }
 
-func updateListUrls(ctx context.Context, slug string) {
+func updateListUrls(ctx context.Context, rdb *redis.Client, slug string) {
+	slog.Info("updating cache list")
 	pipe := rdb.TxPipeline()
 
 	pipe.LRem(ctx, listKey, 0, slug)

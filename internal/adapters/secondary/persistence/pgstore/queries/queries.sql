@@ -76,7 +76,7 @@ UPDATE
 SET
   access_count = access_count + $2
 WHERE
-  id = $1;
+  slug = $1;
 -- name: DeleteShortUrl :exec
 DELETE FROM
   short_urls

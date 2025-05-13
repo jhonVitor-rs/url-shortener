@@ -246,16 +246,16 @@ UPDATE
 SET
   access_count = access_count + $2
 WHERE
-  id = $1
+  slug = $1
 `
 
 type IncrementAccessCountParams struct {
-	ID          uuid.UUID   `json:"id"`
+	Slug        string  	  `json:"slug"`
 	AccessCount pgtype.Int4 `json:"access_count"`
 }
 
 func (q *Queries) IncrementAccessCount(ctx context.Context, arg IncrementAccessCountParams) error {
-	_, err := q.db.Exec(ctx, incrementAccessCount, arg.ID, arg.AccessCount)
+	_, err := q.db.Exec(ctx, incrementAccessCount, arg.Slug, arg.AccessCount)
 	return err
 }
 

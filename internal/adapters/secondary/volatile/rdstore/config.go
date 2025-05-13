@@ -8,6 +8,10 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+type rdb struct {
+	Client *redis.Client
+}
+
 func initRedisClient() *redis.Client {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("Failed to load environment variables")
@@ -32,4 +36,8 @@ func initRedisClient() *redis.Client {
 }
 
 // E depois use:
-var rdb = initRedisClient()
+func NewRedisClient() *rdb {
+	return &rdb{
+		Client: initRedisClient(),
+	}
+}
