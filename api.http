@@ -1,2 +1,34 @@
-http://localhost:8080/api/users
-Authorization: Bearer 
+GET http://localhost:8080/api/users/all
+
+###
+POST http://localhost:8080/api/users/login
+content-type: type: aplication/json
+
+{
+  "email": "joao.siben@email.com"
+}
+
+###
+PATCH http://localhost:8080/api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
+
+{
+  "name": "Jhon Doe"
+}
+
+###
+GET http://localhost:8080/api/short_url/list
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
+
+###
+GET http://localhost:8080/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
+
+###
+DELETE http://localhost:8080/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
+
+
+###
+DELETE http://localhost:8080/api/users
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68

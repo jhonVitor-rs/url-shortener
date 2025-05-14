@@ -79,7 +79,10 @@ func (r *userRepository) Update(ctx context.Context, params *pgstore.UpdateUserP
 }
 
 func (r *userRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.q.DeleteUser(ctx, id)
+	if err := r.q.DeleteUser(ctx, id); err != nil {
+		return wraperrors.InternalErr("something went wrong", err)
+	}
+	return nil
 }
 
 func (r *userRepository) List(ctx context.Context) ([]*models.User, error) {

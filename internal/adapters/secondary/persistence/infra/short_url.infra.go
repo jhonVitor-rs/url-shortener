@@ -105,7 +105,10 @@ func (r *shortUrlRepository) Update(ctx context.Context, params *pgstore.UpdateS
 }
 
 func (r *shortUrlRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.q.DeleteUser(ctx, id)
+	if err := r.q.DeleteShortUrl(ctx, id); err != nil {
+		return wraperrors.InternalErr("something went wrong", err)
+	}
+	return nil
 }
 
 func (r *shortUrlRepository) List(ctx context.Context, userId uuid.UUID) ([]*models.ShortUrl, error) {

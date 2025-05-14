@@ -13,7 +13,7 @@ type CreateUserInput struct {
 
 type UpdateUserInput struct {
 	Name  *string `json:"name"`
-	Email *string `json:"email" validate:"email"`
+	Email *string `json:"email"`
 }
 
 type GetUserByEmailInput struct {
