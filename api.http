@@ -1,8 +1,17 @@
 GET http://localhost:8080/api/users/all
 
 ###
+POST http://localhost:8080/api/users
+content-type: application/json
+
+{
+  "name": "Jhon Doe",
+  "mail": "jhon.doe@email.com"
+}
+
+###
 POST http://localhost:8080/api/users/login
-content-type: type: aplication/json
+content-type: aplication/json
 
 {
   "email": "joao.siben@email.com"

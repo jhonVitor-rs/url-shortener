@@ -13,8 +13,12 @@ var appErr *wraperrors.AppError
 func SendErrors(w http.ResponseWriter, err error) {
 	if errors.As(err, &appErr) {
 		slog.Error(appErr.Message, "error", appErr.Err)
-		http.Error(w, appErr.Message, appErr.Code)
+		writeJSON(w, appErr.Code, ErrorResponse{
+			Message: appErr.Message, Error: &appErr.Err,
+		})
 		return
 	}
-	http.Error(w, "unexpected error", http.StatusInternalServerError)
+	writeJSON(w, 500, ErrorResponse{
+		Message: "Unexpected error", Error: &err,
+	})
 }

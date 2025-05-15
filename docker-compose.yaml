@@ -4,13 +4,26 @@ services:
   postgres:
     image: postgres:17-alpine
     ports:
-      - "${DATABASE_PORT:-5432}:5432"
+      - "${DATABASE_DEV_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: "${DATABASE_USER}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
       POSTGRES_DB: "${DATABASE_NAME}"
     volumes:
       - db:/var/lib/postgresql/data
+    networks:
+      - shorter-url
+
+  postgres_test:
+    image: postgres:17-alpine
+    ports:
+      - "${DATABASE_TEST_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: "${DATABASE_USER}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
+      POSTGRES_DB: "${DATABASE_NAME}"
+    volumes:
+      - db_test:/var/lib/postgresql/data
     networks:
       - shorter-url
 
@@ -26,6 +39,8 @@ services:
 
 volumes:
   db:
+    driver: local
+  db_test:
     driver: local
   redis-data:
     driver: local

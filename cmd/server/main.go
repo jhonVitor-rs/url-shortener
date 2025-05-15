@@ -31,6 +31,7 @@ func main() {
 	defer pool.Close()
 
 	rdb := setupRedisConnection(ctx)
+	defer rdb.Close()
 
 	handler := api.NewApiHandler(pgstore.New(pool), rdb)
 
@@ -68,7 +69,7 @@ func setupDatabseConnection(ctx context.Context) *pgxpool.Pool {
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
 		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_PORT"),
+		os.Getenv("DATABASE_DEV_PORT"),
 		os.Getenv("DATABASE_NAME"),
 	)
 

@@ -4,7 +4,6 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -13,11 +12,6 @@ type rdb struct {
 }
 
 func initRedisClient() *redis.Client {
-	if err := godotenv.Load(); err != nil {
-		slog.Warn("Failed to load environment variables")
-		panic(err)
-	}
-
 	redisPassword := os.Getenv("REDIS_PASSWORD")
 	redisHost := os.Getenv("REDIS_HOST")
 
