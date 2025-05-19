@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 )
 
 var jwtSecret = []byte(os.Getenv("MY_SECRET_KEY"))
@@ -29,7 +30,9 @@ func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			http.Error(w, "missing or invalid token", http.StatusUnauthorized)
+			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
+				Message: "Missing or invalid token",
+			})
 			return
 		}
 
@@ -40,19 +43,25 @@ func JWTAuth(next http.Handler) http.Handler {
 		})
 
 		if err != nil || !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
+				Message: "Invalid token", Error: &err,
+			})
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
+				Message: "Invalid token claims",
+			})
 			return
 		}
 
 		userID, ok := claims["user_id"].(string)
 		if !ok {
-			http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
+				Message: "Invalid user ID in tokne",
+			})
 			return
 		}
 

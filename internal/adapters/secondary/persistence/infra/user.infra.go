@@ -55,7 +55,7 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	dbUser, err := r.q.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, wraperrors.NotFoundErr("User not fund")
+			return nil, wraperrors.NotFoundErr("User not found")
 		}
 		slog.Error("error to database", "error", err)
 		return nil, wraperrors.InternalErr("something went wrong", err)

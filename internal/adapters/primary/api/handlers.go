@@ -40,7 +40,7 @@ func (h apiHandler) handleListUsers(w http.ResponseWriter, r *http.Request) {
 func (h apiHandler) handleGetUser(w http.ResponseWriter, r *http.Request) {
 	userId, ok := middlewares.GetUserIdFromContex(r.Context())
 	if !ok {
-		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		utils.WriteJSON(w, http.StatusUnauthorized, "Invalid user ID in token")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h apiHandler) handleGetUserByEmail(w http.ResponseWriter, r *http.Request)
 func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 	userId, ok := middlewares.GetUserIdFromContex(r.Context())
 	if !ok {
-		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		utils.WriteJSON(w, http.StatusUnauthorized, "Invalid user ID in token")
 		return
 	}
 
@@ -99,7 +99,7 @@ func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 	userId, ok := middlewares.GetUserIdFromContex(r.Context())
 	if !ok {
-		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		utils.WriteJSON(w, http.StatusUnauthorized, "Invalid user ID in token")
 		return
 	}
 
@@ -115,7 +115,7 @@ func (h apiHandler) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request) {
 	userId, ok := middlewares.GetUserIdFromContex(r.Context())
 	if !ok {
-		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		utils.WriteJSON(w, http.StatusUnauthorized, "Invalid user ID in token")
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h apiHandler) handleCreateShortUrl(w http.ResponseWriter, r *http.Request)
 func (h apiHandler) handleListShortUrlsByUser(w http.ResponseWriter, r *http.Request) {
 	userId, ok := middlewares.GetUserIdFromContex(r.Context())
 	if !ok {
-		http.Error(w, "Invalid user ID in token", http.StatusUnauthorized)
+		utils.WriteJSON(w, http.StatusUnauthorized, "Invalid user ID in token")
 		return
 	}
 
