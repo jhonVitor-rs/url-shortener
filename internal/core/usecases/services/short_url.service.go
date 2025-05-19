@@ -61,11 +61,13 @@ func (s *shortUrlService) GetShortUrlBySlug(ctx context.Context, slug string) (*
 func (s *shortUrlService) UpdateShortUrl(ctx context.Context, id string, input *ports.UpdateShortUrlInput) (string, error) {
 	shortUrlId, err := uuid.Parse(id)
 	if err != nil {
+		slog.Error("error to parse short url id", "error", err)
 		return "", wraperrors.InternalErr("something went wrong", err)
 	}
 
 	shortUrl, err := s.shortUrlRepo.GetShortUrl(ctx, shortUrlId)
 	if err != nil {
+		slog.Error("erro to get short url", "error", err)
 		return "", wraperrors.NotFoundErr("short err not found")
 	}
 
@@ -75,14 +77,14 @@ func (s *shortUrlService) UpdateShortUrl(ctx context.Context, id string, input *
 
 	newSlug, err := s.genSlug(ctx, 1)
 	if err != nil {
-		return "", err
+		return "", wraperrors.InternalErr("Failed to generate slug", err)
 	}
 
 	return s.shortUrlRepo.Update(ctx, &pgstore.UpdateShortUrlParams{
 		ID:          shortUrlId,
 		Slug:        newSlug,
 		OriginalUrl: shortUrl.OriginalUrl,
-		ExpiresAt:   pgtype.Timestamptz{Time: *shortUrl.ExpiresAt, Valid: shortUrl.ExpiresAt != nil},
+		ExpiresAt:   pgtype.Timestamptz{Valid: false},
 	})
 }
 

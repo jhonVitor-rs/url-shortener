@@ -44,7 +44,7 @@ func JWTAuth(next http.Handler) http.Handler {
 
 		if err != nil || !token.Valid {
 			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Invalid token", Error: &err,
+				Message: "Invalid token", Error: err.Error(),
 			})
 			return
 		}
@@ -60,7 +60,7 @@ func JWTAuth(next http.Handler) http.Handler {
 		userID, ok := claims["user_id"].(string)
 		if !ok {
 			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Invalid user ID in tokne",
+				Message: "Invalid user ID in token",
 			})
 			return
 		}

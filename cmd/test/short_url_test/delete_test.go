@@ -1,4 +1,4 @@
-package user_test
+package shorturltest_test
 
 import (
 	"fmt"
@@ -10,16 +10,15 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestIntegrationDeleteUser(t *testing.T) {
-	t.Run("Delete user with success", func(t *testing.T) {
-		token := setupTestUser(t)
-		req := httptest.NewRequest(http.MethodDelete, "/api/users", nil)
+func TestIntegrationDeleteShortUrl(t *testing.T) {
+	t.Run("Delete short url with success", func(t *testing.T) {
+		token, shortUrlId := setupTestShortUrl(t)
+		req := httptest.NewRequest(http.MethodDelete, fmt.Sprintf("/api/short_url/%s", shortUrlId), nil)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
-
 	})
 }

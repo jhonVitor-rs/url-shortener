@@ -21,38 +21,32 @@ func TestIntegrationCreateUser(t *testing.T) {
 			Name:  "Jhon Doe",
 			Email: "jhon.doe@email.com",
 		}
-
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
-
 		recorder := httptest.NewRecorder()
-
 		test.Handler().ServeHTTP(recorder, req)
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, http.StatusCreated, recorder.Code)
 
 		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
-
 		assert.NotEmpty(t, response.ID)
 	})
 
-	t.Run("Error to create with the same emai", func(t *testing.T) {
+	t.Run("Error to create with the same email", func(t *testing.T) {
 		input := ports.CreateUserInput{
 			Name:  "Jhon Doe",
 			Email: "jhon.doe@email.com",
 		}
-
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
-
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
@@ -61,29 +55,22 @@ func TestIntegrationCreateUser(t *testing.T) {
 		var resp utils.ErrorResponse
 		err = json.NewDecoder(recorder.Body).Decode(&resp)
 		require.NoError(t, err)
-
 		assert.Equal(t, "email already in use", resp.Message)
 	})
 
-	t.Run("Erro to validation body", func(t *testing.T) {
-		input := ports.CreateUserInput{
-			Name: "Jhon Doe",
-		}
-
+	t.Run("Error to validate request body", func(t *testing.T) {
+		input := ports.CreateUserInput{Name: "Jhon Doe"}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
 		req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
-
 		recorder := httptest.NewRecorder()
-
 		test.Handler().ServeHTTP(recorder, req)
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
 		var resp utils.ErrorResponse
-
 		err = json.NewDecoder(recorder.Body).Decode(&resp)
 		require.NoError(t, err)
 

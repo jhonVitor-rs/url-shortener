@@ -7,7 +7,7 @@ content-type: application/json
 
 {
   "name": "Jhon Doe",
-  "mail": "jhon.doe@email.com"
+  "email": "jhon.doe@email.com"
 }
 
 ###
@@ -15,7 +15,7 @@ POST http://localhost:8080/api/users/login
 content-type: aplication/json
 
 {
-  "email": "joao.siben@email.com"
+  "email": "jhon.doe@email.com"
 }
 
 ###
@@ -23,7 +23,7 @@ PATCH http://localhost:8080/api/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
 
 {
-  "name": "Jhon Doe"
+  "name": "Joao Vitor"
 }
 
 ###
@@ -31,8 +31,26 @@ GET http://localhost:8080/api/short_url/list
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
 
 ###
-GET http://localhost:8080/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
+POST http://localhost:8080/api/short_url
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
+
+{
+  "original_url": "https://www.youtube.com/watch?v=-Ka4YKW7RwM&t=537s"
+}
+
+###
+PATCH http://localhost:8080/api/short_url/33e878ee-344e-40e4-b128-e4ca084a4a7f
+content-type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
+
+{
+  "original_url": "https://www.youtube.com/watch?v=g5ZUG1gKZpE"
+}
+
+###
+GET http://localhost:8080/api/short_url/33e878ee-344e-40e4-b128-e4ca084a4a7f
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
 
 ###
 DELETE http://localhost:8080/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942

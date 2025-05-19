@@ -1,4 +1,4 @@
-package user_test
+package shorturltest_test
 
 import (
 	"bytes"
@@ -16,40 +16,43 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestIntegrationUpdateUser(t *testing.T) {
-	t.Run("Update user with success", func(t *testing.T) {
-		token := setupTestUser(t)
+func TestIntegrationUpdateShortUrl(t *testing.T) {
+	t.Run("Update short url with success", func(t *testing.T) {
+		token, shortUrlId := setupTestShortUrl(t)
 
-		input := ports.UpdateUserInput{
-			Name:  ptr("Joao"),
-			Email: ptr("joao.siben@email.com"),
+		originalUrl := "https://www.youtube.com/watch?v=g5ZUG1gKZpE"
+		input := ports.UpdateShortUrlInput{
+			OriginalUrl: ptr(originalUrl),
 		}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPatch, "/api/users", bytes.NewBuffer(payload))
+		req := httptest.NewRequest(http.MethodPatch, fmt.Sprintf("/api/short_url/%s", shortUrlId), bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
-		assert.Equal(t, http.StatusOK, recorder.Code, "Failed to update user, status code: %d", recorder.Code)
+		assert.Equal(t, http.StatusOK, recorder.Code)
 
 		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+
 		assert.NotEmpty(t, response.ID)
 	})
 
-	t.Run("Failed to update user", func(t *testing.T) {
-		input := ports.UpdateUserInput{
-			Name:  ptr("Joao"),
-			Email: ptr("joao.siben@email.com"),
+	t.Run("Failed to update to missing token", func(t *testing.T) {
+		_, shortUrlId := setupTestShortUrl(t)
+
+		originalUrl := "https://www.youtube.com/watch?v=g5ZUG1gKZpE"
+		input := ports.UpdateShortUrlInput{
+			OriginalUrl: ptr(originalUrl),
 		}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
-		req := httptest.NewRequest(http.MethodPatch, "/api/users", bytes.NewBuffer(payload))
+		req := httptest.NewRequest(http.MethodPatch, fmt.Sprintf("/api/short_url/%s", shortUrlId), bytes.NewBuffer(payload))
 		req.Header.Set("Content-Type", "application/json")
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)

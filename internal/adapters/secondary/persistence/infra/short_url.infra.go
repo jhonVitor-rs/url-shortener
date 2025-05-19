@@ -98,7 +98,8 @@ func (r *shortUrlRepository) GetBySlug(ctx context.Context, slug string) (*model
 
 func (r *shortUrlRepository) Update(ctx context.Context, params *pgstore.UpdateShortUrlParams) (string, error) {
 	if _, err := r.q.UpdateShortUrl(ctx, *params); err != nil {
-		return "", err
+		slog.Error("error to update short url", "error", err)
+		return "", wraperrors.InternalErr("Failed to update short url", err)
 	}
 
 	return params.ID.String(), nil

@@ -20,7 +20,7 @@ type ValidationError struct {
 type ErrorResponse struct {
 	Message string            `json:"message"`
 	Errors  []ValidationError `json:"errors,omitempty"`
-	Error   *error            `json:"error,omitempty"`
+	Error   string            `json:"error,omitempty"`
 }
 
 func WriteJSON(w http.ResponseWriter, status int, data any) {
@@ -32,12 +32,26 @@ func WriteJSON(w http.ResponseWriter, status int, data any) {
 func SendErrors(w http.ResponseWriter, err error) {
 	if errors.As(err, &appErr) {
 		slog.Error(appErr.Message, "error", appErr.Err)
-		WriteJSON(w, appErr.Code, ErrorResponse{
-			Message: appErr.Message, Error: &appErr.Err,
-		})
+		errResp := ErrorResponse{
+			Message: appErr.Message,
+		}
+
+		if appErr.Err != nil {
+			errStr := appErr.Err.Error()
+			errResp.Error = errStr
+		}
+
+		WriteJSON(w, appErr.Code, errResp)
 		return
 	}
-	WriteJSON(w, 500, ErrorResponse{
-		Message: "Unexpected error", Error: &err,
-	})
+	errResp := ErrorResponse{
+		Message: "Unexpected error",
+	}
+
+	if err != nil {
+		errStr := err.Error()
+		errResp.Error = errStr
+	}
+
+	WriteJSON(w, 500, errResp)
 }

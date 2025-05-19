@@ -1,4 +1,4 @@
-package user_test
+package shorturltest_test
 
 import (
 	"bytes"
@@ -54,7 +54,7 @@ func TestMain(m *testing.M) {
 	os.Exit(exitCode)
 }
 
-func setupTestUser(t *testing.T) string {
+func setupTestShortUrl(t *testing.T) (string, string) {
 	email := fmt.Sprintf("jhon.doe+%d@email.com", time.Now().UnixNano())
 	input := ports.CreateUserInput{Name: "Jhon", Email: email}
 	payload, err := json.Marshal(input)
@@ -83,5 +83,21 @@ func setupTestUser(t *testing.T) string {
 	err = json.NewDecoder(recorder.Body).Decode(&token)
 	require.NoError(t, err)
 
-	return token.JWT
+	shortUrlInput := ports.CreateShortUrlInput{
+		OriginalUrl: "https://www.youtube.com/watch?v=-Ka4YKW7RwM&t=537s",
+	}
+	payload, err = json.Marshal(shortUrlInput)
+	require.NoError(t, err)
+
+	req = httptest.NewRequest(http.MethodPost, "/api/short_url", bytes.NewBuffer(payload))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token.JWT))
+	recorder = httptest.NewRecorder()
+	test.Handler().ServeHTTP(recorder, req)
+
+	var shortUrlId models.Response
+	err = json.NewDecoder(recorder.Body).Decode(&shortUrlId)
+	require.NoError(t, err)
+
+	return token.JWT, shortUrlId.ID
 }
