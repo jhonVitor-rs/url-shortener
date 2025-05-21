@@ -1,0 +1,436 @@
+basePath: /
+definitions:
+  models.CreateShortUrlInput:
+    properties:
+      expires_at:
+        type: string
+      original_url:
+        type: string
+    required:
+    - original_url
+    type: object
+  models.CreateUserInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  models.ErrorData:
+    properties:
+      details:
+        type: string
+      errors:
+        items:
+          $ref: '#/definitions/models.ValidationError'
+        type: array
+      message:
+        type: string
+    type: object
+  models.GetUserByEmailInput:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  models.Response:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/models.ErrorData'
+      success:
+        type: boolean
+    type: object
+  models.UpdateShortUrlInput:
+    properties:
+      expires_at:
+        type: string
+      original_url:
+        type: string
+    type: object
+  models.UpdateUserInput:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  models.ValidationError:
+    properties:
+      field:
+        type: string
+      tag:
+        type: string
+      value:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: seuemail@exemplo.com
+    name: Jhon Vitor
+  description: API for creating and managing short URLs and users
+  termsOfService: http://swagger.io/terms/
+  title: URL Shortener API
+  version: "1.0"
+paths:
+  /{slug}:
+    get:
+      description: Redirects to the original URL associated with the provided slug
+      parameters:
+      - description: Short URL slug
+        in: path
+        name: slug
+        required: true
+        type: string
+      responses:
+        "302":
+          description: Redirect to original URL
+          schema:
+            type: string
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Redirect to original URL
+      tags:
+      - redirect
+  /api/short_url:
+    get:
+      description: Returns all short URLs created by the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of short URLs
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Invalid user ID in token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: List user's short URLs
+      tags:
+      - short urls
+    post:
+      consumes:
+      - application/json
+      description: Creates a new short URL for the authenticated user
+      parameters:
+      - description: Original URL information
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateShortUrlInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Short URL created successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid input data or URL format
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Invalid user ID in token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: Create short URL
+      tags:
+      - short urls
+  /api/short_url/{short_url_id}:
+    delete:
+      description: Deletes a specific short URL by ID
+      parameters:
+      - description: Short URL ID
+        in: path
+        name: short_url_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Short URL has deleted with success
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Delete short URL
+      tags:
+      - short urls
+    get:
+      description: Returns details of a specific short URL by ID
+      parameters:
+      - description: Short URL ID
+        in: path
+        name: short_url_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Short URL details
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Get short URL details
+      tags:
+      - short urls
+    patch:
+      consumes:
+      - application/json
+      description: Updates a specific short URL by ID
+      parameters:
+      - description: Short URL ID
+        in: path
+        name: short_url_id
+        required: true
+        type: string
+      - description: Updated URL information
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateShortUrlInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Short URL updated successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: Short URL not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Update short URL
+      tags:
+      - short urls
+  /api/users:
+    delete:
+      description: Deletes the authenticated user's account
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: User deleted with success
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Invalid user ID in token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Returns details of the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Invalid user ID in token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user details
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      description: Updates the authenticated user's information
+      parameters:
+      - description: User updated information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/models.Response'
+        "401":
+          description: Invalid user ID in token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - BearerAuth: []
+      summary: Update user information
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user with the provided information
+      parameters:
+      - description: User information
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: JWT token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/models.Response'
+        "409":
+          description: Email already in use
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Create a new user
+      tags:
+      - users
+  /api/users/all:
+    get:
+      description: Returns a list of all users in the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of users
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: List all users
+      tags:
+      - users
+  /api/users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user by email and returns a JWT token
+      parameters:
+      - description: User email
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/models.GetUserByEmailInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: JWT token
+          schema:
+            $ref: '#/definitions/models.Response'
+        "400":
+          description: Invalid input data
+          schema:
+            $ref: '#/definitions/models.Response'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/models.Response'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Login user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

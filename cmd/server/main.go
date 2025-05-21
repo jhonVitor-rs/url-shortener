@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
+	_ "github.com/jhonVitor-rs/url-shortener/docs"
 	api "github.com/jhonVitor-rs/url-shortener/internal/api/server"
 	"github.com/jhonVitor-rs/url-shortener/internal/api/worker"
 	"github.com/jhonVitor-rs/url-shortener/internal/data/db/pgstore"
@@ -19,6 +20,20 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+//	@title			URL Shortener API
+//	@version		1.0
+//	@description	API for creating and managing short URLs and users
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	Jhon Vitor
+//	@contact.email	seuemail@exemplo.com
+
+//	@host		localhost:8080
+//	@BasePath	/
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 func main() {
 	if err := godotenv.Load(); err != nil {
 		slog.Warn("Failed to load environment variables")

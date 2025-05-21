@@ -5,9 +5,10 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	my_middleware "github.com/jhonVitor-rs/url-shortener/internal/api/middleware"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-func (h apiHandler) registerRoutes() {
+func (h *apiHandler) registerRoutes() {
 	h.r.Use(middleware.RequestID, middleware.Recoverer, middleware.Logger)
 
 	h.r.Use(cors.Handler(cors.Options{
@@ -18,6 +19,8 @@ func (h apiHandler) registerRoutes() {
 		AllowCredentials: false,
 		MaxAge:           300,
 	}))
+
+	h.r.Get("/swagger/*", httpSwagger.Handler())
 
 	h.r.Route("/api", func(r chi.Router) {
 		r.Route("/users", func(r chi.Router) {

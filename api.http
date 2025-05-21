@@ -1,5 +1,4 @@
-GET http://localhost:8080/api/users
-Authorization: 
+GET http://localhost:8080/api/users/all
 
 ###
 POST http://localhost:8080/api/users
