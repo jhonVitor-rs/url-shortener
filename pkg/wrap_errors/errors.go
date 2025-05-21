@@ -71,7 +71,7 @@ func InternalErr(msg string, err error) *AppError {
 	return New(msg, ErrInternal, 500, err)
 }
 
-func UniqueViolationErr(message string) error {
+func UniqueViolationErr(message string) *AppError {
 	return &AppError{
 		Type:    ErrUniqueViolation,
 		Message: message,

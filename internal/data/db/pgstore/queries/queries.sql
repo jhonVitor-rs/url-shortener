@@ -21,7 +21,10 @@ WHERE
 INSERT INTO
   users (NAME, email)
 VALUES
-  ($1, $2) RETURNING id;
+  ($1, $2) RETURNING id,
+  NAME,
+  email,
+  created_at;
 -- name: UpdateUser :one
 UPDATE
   users
@@ -29,7 +32,10 @@ SET
   NAME = $2,
   email = $3
 WHERE
-  id = $1 RETURNING id;
+  id = $1 RETURNING id,
+  NAME,
+  email,
+  created_at;
 -- name: DeleteUser :exec
 DELETE FROM
   users
@@ -60,7 +66,11 @@ WHERE
 INSERT INTO
   short_urls (user_id, slug, original_url, expires_at)
 VALUES
-  ($1, $2, $3, $4) RETURNING id;
+  ($1, $2, $3, $4) RETURNING id,
+  slug,
+  original_url,
+  expires_at,
+  created_at;
 -- name: UpdateShortUrl :one
 UPDATE
   short_urls
@@ -69,7 +79,11 @@ SET
   original_url = $3,
   expires_at = $4
 WHERE
-  id = $1 RETURNING id;
+  id = $1 RETURNING id,
+  slug,
+  original_url,
+  expires_at,
+  created_at;
 -- name: IncrementAccessCount :exec
 UPDATE
   short_urls

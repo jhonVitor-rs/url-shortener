@@ -16,7 +16,11 @@ const createShortUrl = `-- name: CreateShortUrl :one
 INSERT INTO
   short_urls (user_id, slug, original_url, expires_at)
 VALUES
-  ($1, $2, $3, $4) RETURNING id
+  ($1, $2, $3, $4) RETURNING id,
+  slug,
+  original_url,
+  expires_at,
+  created_at
 `
 
 type CreateShortUrlParams struct {
@@ -26,23 +30,40 @@ type CreateShortUrlParams struct {
 	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
 }
 
-func (q *Queries) CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) (uuid.UUID, error) {
+type CreateShortUrlRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Slug        string             `json:"slug"`
+	OriginalUrl string             `json:"original_url"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) CreateShortUrl(ctx context.Context, arg CreateShortUrlParams) (CreateShortUrlRow, error) {
 	row := q.db.QueryRow(ctx, createShortUrl,
 		arg.UserID,
 		arg.Slug,
 		arg.OriginalUrl,
 		arg.ExpiresAt,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i CreateShortUrlRow
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.OriginalUrl,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
-const createUser = `-- name: CreatetUser :one
+const createUser = `-- name: CreateUser :one
 INSERT INTO
   users (NAME, email)
 VALUES
-  ($1, $2) RETURNING id
+  ($1, $2) RETURNING id,
+  NAME,
+  email,
+  created_at
 `
 
 type CreateUserParams struct {
@@ -50,11 +71,16 @@ type CreateUserParams struct {
 	Email string `json:"email"`
 }
 
-func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (uuid.UUID, error) {
+func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, createUser, arg.Name, arg.Email)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const deleteShortUrl = `-- name: DeleteShortUrl :exec
@@ -250,7 +276,7 @@ WHERE
 `
 
 type IncrementAccessCountParams struct {
-	Slug        string  	  `json:"slug"`
+	Slug        string      `json:"slug"`
 	AccessCount pgtype.Int4 `json:"access_count"`
 }
 
@@ -267,7 +293,11 @@ SET
   original_url = $3,
   expires_at = $4
 WHERE
-  id = $1 RETURNING id
+  id = $1 RETURNING id,
+  slug,
+  original_url,
+  expires_at,
+  created_at
 `
 
 type UpdateShortUrlParams struct {
@@ -277,16 +307,30 @@ type UpdateShortUrlParams struct {
 	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
 }
 
-func (q *Queries) UpdateShortUrl(ctx context.Context, arg UpdateShortUrlParams) (uuid.UUID, error) {
+type UpdateShortUrlRow struct {
+	ID          uuid.UUID          `json:"id"`
+	Slug        string             `json:"slug"`
+	OriginalUrl string             `json:"original_url"`
+	ExpiresAt   pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) UpdateShortUrl(ctx context.Context, arg UpdateShortUrlParams) (UpdateShortUrlRow, error) {
 	row := q.db.QueryRow(ctx, updateShortUrl,
 		arg.ID,
 		arg.Slug,
 		arg.OriginalUrl,
 		arg.ExpiresAt,
 	)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i UpdateShortUrlRow
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.OriginalUrl,
+		&i.ExpiresAt,
+		&i.CreatedAt,
+	)
+	return i, err
 }
 
 const updateUser = `-- name: UpdateUser :one
@@ -296,7 +340,10 @@ SET
   NAME = $2,
   email = $3
 WHERE
-  id = $1 RETURNING id
+  id = $1 RETURNING id,
+  NAME,
+  email,
+  created_at
 `
 
 type UpdateUserParams struct {
@@ -305,9 +352,14 @@ type UpdateUserParams struct {
 	Email string    `json:"email"`
 }
 
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (uuid.UUID, error) {
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
 	row := q.db.QueryRow(ctx, updateUser, arg.ID, arg.Name, arg.Email)
-	var id uuid.UUID
-	err := row.Scan(&id)
-	return id, err
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Email,
+		&i.CreatedAt,
+	)
+	return i, err
 }

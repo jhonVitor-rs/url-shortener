@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"context"
@@ -8,7 +8,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
+	"github.com/jhonVitor-rs/url-shortener/internal/api/hooks"
+	wraperrors "github.com/jhonVitor-rs/url-shortener/pkg/wrap_errors"
 )
 
 var jwtSecret = []byte(os.Getenv("MY_SECRET_KEY"))
@@ -30,47 +31,42 @@ func JWTAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
 		if !strings.HasPrefix(authHeader, "Bearer ") {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Missing or invalid token",
-			})
+			hooks.SendResponse(w, http.StatusUnauthorized, nil, wraperrors.UnauthorizedErr("Missing or invalid token"))
 			return
 		}
 
 		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
 
-		token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 			return jwtSecret, nil
 		})
 
 		if err != nil || !token.Valid {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Invalid token", Error: err.Error(),
-			})
+			hooks.SendResponse(w, http.StatusUnauthorized, nil, wraperrors.UnauthorizedErr("Invalid token"))
 			return
 		}
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Invalid token claims",
-			})
+			hooks.SendResponse(w, http.StatusUnauthorized, nil, wraperrors.UnauthorizedErr("Invalid token claims"))
 			return
 		}
 
-		userID, ok := claims["user_id"].(string)
+		userId, ok := claims["user_id"].(string)
 		if !ok {
-			utils.WriteJSON(w, http.StatusUnauthorized, utils.ErrorResponse{
-				Message: "Invalid user ID in token",
-			})
+			hooks.SendResponse(w, http.StatusUnauthorized, nil, wraperrors.UnauthorizedErr("Invalid user ID in tokne"))
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), userIDKey, userID)
+		ctx := context.WithValue(r.Context(), userIDKey, userId)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func GetUserIdFromContex(ctx context.Context) (string, bool) {
+func GetUserIdFromContext(ctx context.Context) (string, error) {
 	id, ok := ctx.Value(userIDKey).(string)
-	return id, ok
+	if !ok {
+		return "", wraperrors.UnauthorizedErr("Invalid user ID in token")
+	}
+	return id, nil
 }

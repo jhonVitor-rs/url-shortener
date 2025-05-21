@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/api"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/workers"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
+	api "github.com/jhonVitor-rs/url-shortener/internal/api/server"
+	"github.com/jhonVitor-rs/url-shortener/internal/api/worker"
+	"github.com/jhonVitor-rs/url-shortener/internal/data/db/pgstore"
+	"github.com/jhonVitor-rs/url-shortener/internal/data/db/rdstore"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
@@ -51,7 +51,7 @@ func main() {
 		}
 	}()
 
-	workers.StartHourlyAccessWorker(pgstore.New(pool), rdb)
+	worker.StartHourlyAccessSyncWorker(pgstore.New(pool), rdb)
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
@@ -69,7 +69,7 @@ func setupDatabseConnection(ctx context.Context) *pgxpool.Pool {
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
 		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_DEV_PORT"),
+		os.Getenv("DATABASE_PORT"),
 		os.Getenv("DATABASE_NAME"),
 	)
 
@@ -101,12 +101,12 @@ func setupDatabseConnection(ctx context.Context) *pgxpool.Pool {
 
 func setupRedisConnection(ctx context.Context) *redis.Client {
 	rdb := rdstore.NewRedisClient()
-
 	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := rdstore.HealthCheck(checkCtx, rdb.Client); err != nil {
+	if err := rdb.HealthCheck(checkCtx); err != nil {
 		slog.Warn("Redis connection check failed - cache will be unavailable", "error", err)
+		panic(err)
 	} else {
 		slog.Info("Redis connection with successfully")
 	}

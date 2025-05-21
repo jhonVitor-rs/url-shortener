@@ -17,9 +17,9 @@ func main() {
 		"tern",
 		"migrate",
 		"--migrations",
-		"./internal/store/pgstore/migrations",
+		"./internal/data/db/pgstore/migrations",
 		"--config",
-		"./internal/store/pgstore/migrations/tern.conf",
+		"./internal/data/db/pgstore/migrations/tern.conf",
 	)
 
 	if err := cmd.Run(); err != nil {
