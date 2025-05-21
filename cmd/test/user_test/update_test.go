@@ -10,8 +10,6 @@ import (
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +18,7 @@ func TestIntegrationUpdateUser(t *testing.T) {
 	t.Run("Update user with success", func(t *testing.T) {
 		token := setupTestUser(t)
 
-		input := ports.UpdateUserInput{
+		input := models.UpdateUserInput{
 			Name:  ptr("Joao"),
 			Email: ptr("joao.siben@email.com"),
 		}
@@ -38,11 +36,17 @@ func TestIntegrationUpdateUser(t *testing.T) {
 		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
-		assert.NotEmpty(t, response.ID)
+		assert.Equal(t, true, response.Success)
+
+		userData, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Respose data should be a map")
+		userName, exists := userData["name"]
+		assert.True(t, exists, "Name field should exist in response data")
+		assert.Equal(t, "Joao", userName)
 	})
 
 	t.Run("Failed to update user", func(t *testing.T) {
-		input := ports.UpdateUserInput{
+		input := models.UpdateUserInput{
 			Name:  ptr("Joao"),
 			Email: ptr("joao.siben@email.com"),
 		}
@@ -56,10 +60,12 @@ func TestIntegrationUpdateUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
-		assert.Equal(t, "Missing or invalid token", response.Message)
+
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, "Missing or invalid token", response.Error.Message)
 	})
 }
 

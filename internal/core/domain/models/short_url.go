@@ -20,12 +20,12 @@ type ShortUrl struct {
 
 type CreateShortUrlInput struct {
 	OriginalUrl string  `json:"original_url" validate:"required"`
-	ExpiresAt   *string `json:"expires_at,omitempty" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
 }
 
 type UpdateShortUrlInput struct {
 	OriginalUrl *string `json:"original_url,omitempty"`
-	ExpiresAt   *string `json:"expires_at,omitempty" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
 }
 
 func (i *CreateShortUrlInput) ToPgCreateShortUrl(userId uuid.UUID, slug string) *pgstore.CreateShortUrlParams {

@@ -114,11 +114,16 @@ func (s *shortUrlService) CreateShortUrl(ctx context.Context, rawUserId string, 
 		return nil, wraperrors.InternalErr("Failed to create short URL", err)
 	}
 
+	var expiresAt *time.Time
+	if dbShortUrl.ExpiresAt.Valid {
+		expiresAt = &dbShortUrl.ExpiresAt.Time
+	}
+
 	return &models.ShortUrl{
 		ID:          dbShortUrl.ID.String(),
 		Slug:        dbShortUrl.Slug,
 		OriginalUrl: dbShortUrl.OriginalUrl,
-		ExpiresAt:   &dbShortUrl.ExpiresAt.Time,
+		ExpiresAt:   expiresAt,
 		CreatedAt:   dbShortUrl.CreatedAt.Time,
 	}, nil
 }
@@ -147,11 +152,16 @@ func (s *shortUrlService) UpdateShortUrl(ctx context.Context, id string, input *
 		return nil, wraperrors.InternalErr("Failed to update short URL", err)
 	}
 
+	var expiresAt *time.Time
+	if dbShortUrl.ExpiresAt.Valid {
+		expiresAt = &dbShortUrl.ExpiresAt.Time
+	}
+
 	return &models.ShortUrl{
 		ID:          dbShortUrl.ID.String(),
 		Slug:        dbShortUrl.Slug,
 		OriginalUrl: dbShortUrl.OriginalUrl,
-		ExpiresAt:   &dbShortUrl.ExpiresAt.Time,
+		ExpiresAt:   expiresAt,
 		CreatedAt:   dbShortUrl.CreatedAt.Time,
 	}, nil
 }

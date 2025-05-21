@@ -12,10 +12,9 @@ import (
 	"time"
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/primary/api"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/persistence/pgstore"
+	api "github.com/jhonVitor-rs/url-shortener/internal/api/server"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
+	"github.com/jhonVitor-rs/url-shortener/internal/data/db/pgstore"
 	"github.com/stretchr/testify/require"
 )
 
@@ -56,32 +55,42 @@ func TestMain(m *testing.M) {
 
 func setupTestUser(t *testing.T) string {
 	email := fmt.Sprintf("jhon.doe+%d@email.com", time.Now().UnixNano())
-	input := ports.CreateUserInput{Name: "Jhon", Email: email}
+
+	input := models.CreateUserInput{Name: "Jhon", Email: email}
 	payload, err := json.Marshal(input)
 	require.NoError(t, err)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/users", bytes.NewBuffer(payload))
 	req.Header.Set("Content-Type", "application/json")
 	recorder := httptest.NewRecorder()
-	test.Handler().ServeHTTP(recorder, req)
 
+	test.Handler().ServeHTTP(recorder, req)
 	if recorder.Code != http.StatusCreated && recorder.Code != http.StatusConflict {
 		t.Fatalf("unexpected status code when creating user: %d", recorder.Code)
 	}
 
-	loginInput := ports.GetUserByEmailInput{Email: input.Email}
+	loginInput := models.GetUserByEmailInput{Email: input.Email}
 	loginPayload, err := json.Marshal(loginInput)
 	require.NoError(t, err)
 
 	req = httptest.NewRequest(http.MethodPost, "/api/users/login", bytes.NewBuffer(loginPayload))
 	req.Header.Set("Content-Type", "application/json")
 	recorder = httptest.NewRecorder()
-	test.Handler().ServeHTTP(recorder, req)
-	require.Equal(t, http.StatusOK, recorder.Code)
 
-	var token models.Token
-	err = json.NewDecoder(recorder.Body).Decode(&token)
+	test.Handler().ServeHTTP(recorder, req)
+	require.Equal(t, http.StatusCreated, recorder.Code)
+
+	var responseToken models.Response
+	err = json.NewDecoder(recorder.Body).Decode(&responseToken)
 	require.NoError(t, err)
 
-	return token.JWT
+	tokenData, ok := responseToken.Data.(map[string]interface{})
+	require.True(t, ok, "Response data should be a map")
+
+	jwtToken, exists := tokenData["jwt"]
+	require.True(t, exists, "JWT field should exist in response")
+	token := jwtToken.(string)
+	require.NotEmpty(t, token, "JWT token shoud not be empty")
+
+	return token
 }

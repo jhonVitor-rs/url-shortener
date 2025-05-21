@@ -9,7 +9,6 @@ import (
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +17,7 @@ func TestIntegrationGetShorUrl(t *testing.T) {
 	t.Run("Get all short urls by user with success", func(t *testing.T) {
 		token, _ := setupTestShortUrl(t)
 
-		req := httptest.NewRequest(http.MethodGet, "/api/short_url/list", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/short_url", nil)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		recorder := httptest.NewRecorder()
@@ -26,17 +25,20 @@ func TestIntegrationGetShorUrl(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 
-		var response []*models.ShortUrl
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, response)
+		shortUrls, ok := response.Data.([]interface{})
+		assert.True(t, ok, "Response data should be a slice")
+		assert.NotEmpty(t, shortUrls, "Short URLs list should not be empty")
 	})
 
 	t.Run("Get short url by id with success", func(t *testing.T) {
-		token, shortUrlId := setupTestShortUrl(t)
+		token, shortUrl := setupTestShortUrl(t)
 
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/short_url/%s", shortUrlId), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/short_url/%s", shortUrl.ID), nil)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
 		recorder := httptest.NewRecorder()
@@ -44,29 +46,24 @@ func TestIntegrationGetShorUrl(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 
-		var response models.ShortUrl
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, response.ID)
+		shortUrlMap, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Response data should be a map")
+		slug, exists := shortUrlMap["slug"]
+		assert.True(t, exists, "Slug field should exist in response data")
+		assert.NotEmpty(t, slug, "Slug should not empty")
 	})
 
 	t.Run("Redirec with url", func(t *testing.T) {
-		token, shortUrlId := setupTestShortUrl(t)
+		_, shortUrl := setupTestShortUrl(t)
 
-		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/api/short_url/%s", shortUrlId), nil)
-		req.Header.Set("Content-Type", "application/json")
-		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
-		recorder := httptest.NewRecorder()
-		test.Handler().ServeHTTP(recorder, req)
-
-		var shortUrl models.ShortUrl
-		err := json.NewDecoder(recorder.Body).Decode(&shortUrl)
-		require.NoError(t, err)
-
-		req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/redirect/%s", shortUrl.Slug), nil)
+		req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/%s", shortUrl.Slug), nil)
 		req.Header.Set("Content_type", "application/json")
-		recorder = httptest.NewRecorder()
+		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
 		assert.Equal(t, http.StatusFound, recorder.Code)
@@ -81,27 +78,29 @@ func TestIntegrationGetShorUrl(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
-		assert.Equal(t, http.StatusInternalServerError, recorder.Code)
+		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "something went wrong", response.Message)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, response.Error.Message, "Invalid short URL ID format")
 	})
 
 	t.Run("Erro to get a short url with invalid slug", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/redirect/invalid-slug", nil)
+		req := httptest.NewRequest(http.MethodGet, "/invalid-slug", nil)
 		req.Header.Set("Content-Type", "application/json")
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "short URL with slug 'invalid-slug' not found", response.Message)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, response.Error.Message, "Short URL not found")
 	})
 }

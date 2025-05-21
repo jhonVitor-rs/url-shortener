@@ -9,15 +9,13 @@ import (
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestIntegrationCreateUser(t *testing.T) {
 	t.Run("Create user with success", func(t *testing.T) {
-		input := ports.CreateUserInput{
+		input := models.CreateUserInput{
 			Name:  "Jhon Doe",
 			Email: "jhon.doe@email.com",
 		}
@@ -34,11 +32,17 @@ func TestIntegrationCreateUser(t *testing.T) {
 		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
-		assert.NotEmpty(t, response.ID)
+		assert.Equal(t, true, response.Success)
+
+		token, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Response data should be a map")
+		jwt, exists := token["jwt"]
+		assert.True(t, exists, "JWT field should exist in response data")
+		assert.NotEmpty(t, jwt, "JWT token should not be empty")
 	})
 
 	t.Run("Error to create with the same email", func(t *testing.T) {
-		input := ports.CreateUserInput{
+		input := models.CreateUserInput{
 			Name:  "Jhon Doe",
 			Email: "jhon.doe@email.com",
 		}
@@ -52,14 +56,15 @@ func TestIntegrationCreateUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusConflict, recorder.Code)
 
-		var resp utils.ErrorResponse
+		var resp models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&resp)
 		require.NoError(t, err)
-		assert.Equal(t, "email already in use", resp.Message)
+		assert.Equal(t, false, resp.Success)
+		assert.Equal(t, resp.Error.Message, "Email already in use")
 	})
 
 	t.Run("Error to validate request body", func(t *testing.T) {
-		input := ports.CreateUserInput{Name: "Jhon Doe"}
+		input := models.CreateUserInput{Name: "Jhon Doe"}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
@@ -70,13 +75,12 @@ func TestIntegrationCreateUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
-		var resp utils.ErrorResponse
+		var resp models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&resp)
 		require.NoError(t, err)
 
-		assert.Equal(t, "Invalid input", resp.Message)
-		assert.Len(t, resp.Errors, 1)
-		assert.Equal(t, "Email", resp.Errors[0].Field)
-		assert.Equal(t, "required", resp.Errors[0].Tag)
+		assert.Equal(t, false, resp.Success)
+		assert.Equal(t, resp.Error.Message, "Invalid input")
+		assert.Len(t, resp.Error.Errors, 1)
 	})
 }

@@ -8,18 +8,18 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/jhonVitor-rs/url-shortener/internal/adapters/secondary/volatile/rdstore"
+	"github.com/jhonVitor-rs/url-shortener/internal/data/db/rdstore"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
 func setupDatabseConnectionTests(ctx context.Context) *pgxpool.Pool {
 	connectionSring := fmt.Sprintf(
-		"user=%s password=%s host=%s port=%s dbname=%s",
+		"user=%s password=%s host=%s port=%s dbname=%s_test sslmode=disable",
 		os.Getenv("DATABASE_USER"),
 		os.Getenv("DATABASE_PASSWORD"),
 		os.Getenv("DATABASE_HOST"),
-		os.Getenv("DATABASE_TEST_PORT"),
+		os.Getenv("DATABASE_PORT"),
 		os.Getenv("DATABASE_NAME"),
 	)
 
@@ -53,7 +53,7 @@ func setupRedisConnectionTests(ctx context.Context) *redis.Client {
 	checkCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if err := rdstore.HealthCheck(checkCtx, rdb.Client); err != nil {
+	if err := rdb.HealthCheck(checkCtx); err != nil {
 		slog.Warn("Redis connection check failed - cache will be unavailable", "error", err)
 	} else {
 		slog.Info("Redis connection with successfully")

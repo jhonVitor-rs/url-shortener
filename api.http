@@ -33,19 +33,20 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5O
 ###
 POST http://localhost:8080/api/short_url
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4ODksInVzZXJfaWQiOiIyNWVhYmVkMS0zYTMwLTQzOWUtOTYwOS02N2U1YWQ0MGRlY2EifQ.tebr-Sad2ZwlXjvafzQRjkC_SW1ylEyeluu54uwyF6M
 
 {
   "original_url": "https://www.youtube.com/watch?v=-Ka4YKW7RwM&t=537s"
 }
 
 ###
-PATCH http://localhost:8080/api/short_url/33e878ee-344e-40e4-b128-e4ca084a4a7f
+PATCH http://localhost:8080/api/short_url/b3f338ed-4db0-476f-8f60-a0f4c2e28d3e
 content-type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4ODksInVzZXJfaWQiOiIyNWVhYmVkMS0zYTMwLTQzOWUtOTYwOS02N2U1YWQ0MGRlY2EifQ.tebr-Sad2ZwlXjvafzQRjkC_SW1ylEyeluu54uwyF6M
 
 {
-  "original_url": "https://www.youtube.com/watch?v=g5ZUG1gKZpE"
+  "original_url": "https://www.youtube.com/watch?v=g5ZUG1gKZpE",
+  "expires_at": "2025-12-31T23:59:59Z"
 }
 
 ###

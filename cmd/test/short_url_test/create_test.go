@@ -10,8 +10,6 @@ import (
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +18,7 @@ func TestIntegrationCreateShortUrl(t *testing.T) {
 	t.Run("Create short url with success", func(t *testing.T) {
 		token, _ := setupTestShortUrl(t)
 
-		input := ports.CreateShortUrlInput{
+		input := models.CreateShortUrlInput{
 			OriginalUrl: "https://www.youtube.com/watch?v=-Ka4YKW7RwM&t=537s",
 		}
 		payload, err := json.Marshal(input)
@@ -37,12 +35,17 @@ func TestIntegrationCreateShortUrl(t *testing.T) {
 		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, response.ID)
+		shortUrl, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Response data should be a map")
+		slug, exists := shortUrl["slug"]
+		assert.True(t, exists, "Slug field should exist in response data")
+		assert.NotEmpty(t, slug, "Slug should not empty")
 	})
 
 	t.Run("Error due to lack of token", func(t *testing.T) {
-		input := ports.CreateShortUrlInput{
+		input := models.CreateShortUrlInput{
 			OriginalUrl: "https://www.youtube.com/watch?v=-Ka4YKW7RwM&t=537s",
 		}
 		payload, err := json.Marshal(input)
@@ -55,17 +58,18 @@ func TestIntegrationCreateShortUrl(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "Missing or invalid token", response.Message)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, response.Error.Message, "Missing or invalid token")
 	})
 
 	t.Run("Invalid input error", func(t *testing.T) {
 		token, _ := setupTestShortUrl(t)
 
-		input := ports.CreateShortUrlInput{}
+		input := models.CreateShortUrlInput{}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
@@ -77,13 +81,11 @@ func TestIntegrationCreateShortUrl(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "Invalid input", response.Message)
-		assert.Len(t, response.Errors, 1)
-		assert.Equal(t, "OriginalUrl", response.Errors[0].Field)
-		assert.Equal(t, "required", response.Errors[0].Tag)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, response.Error.Message, "Invalid input")
 	})
 }

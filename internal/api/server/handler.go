@@ -53,7 +53,7 @@ func (h apiHandler) handleGetUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param credentials body models.GetUserByEmailInput true "User email"
-// @Success 200 {object} models.Response "JWT token"
+// @Success 201 {object} models.Response "JWT token"
 // @Failure 400 {object} models.Response "Invalid input data"
 // @Failure 404 {object} models.Response "User not found"
 // @Failure 500 {object} models.Response "Internal server error"
@@ -80,7 +80,7 @@ func (h apiHandler) handleGetUserByEmail(w http.ResponseWriter, r *http.Request)
 // @Accept json
 // @Produce json
 // @Param user body models.CreateUserInput true "User information"
-// @Success 200 {object} models.Response "JWT token"
+// @Success 201 {object} models.Response "JWT token"
 // @Failure 400 {object} models.Response "Invalid input data"
 // @Failure 409 {object} models.Response "Email already in use"
 // @Failure 500 {object} models.Response "Internal server error"
@@ -135,7 +135,7 @@ func (h apiHandler) handleUpdateUser(w http.ResponseWriter, r *http.Request) {
 // @Description Deletes the authenticated user's account
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} models.Response "User deleted with success"
+// @Success 204 {object} models.Response "User deleted with success"
 // @Failure 401 {object} models.Response "Invalid user ID in token"
 // @Failure 404 {object} models.Response "User not found"
 // @Failure 500 {object} models.Response "Internal server error"
@@ -251,7 +251,7 @@ func (h apiHandler) handleUpdateShortUrl(w http.ResponseWriter, r *http.Request)
 // @Description Deletes a specific short URL by ID
 // @Produce json
 // @Param short_url_id path string true "Short URL ID"
-// @Success 200 {object} models.Response "Short URL has deleted with success"
+// @Success 204 {object} models.Response "Short URL has deleted with success"
 // @Failure 404 {object} models.Response "Short URL not found"
 // @Failure 500 {object} models.Response "Internal server error"
 // @Router /api/short_url/{short_url_id} [delete]

@@ -10,8 +10,6 @@ import (
 
 	"github.com/jhonVitor-rs/url-shortener/cmd/test"
 	"github.com/jhonVitor-rs/url-shortener/internal/core/domain/models"
-	"github.com/jhonVitor-rs/url-shortener/internal/core/usecases/ports"
-	"github.com/jhonVitor-rs/url-shortener/pkg/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -25,11 +23,14 @@ func TestIntegrationGetUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 
-		var response []*models.User
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, response)
+		users, ok := response.Data.([]interface{})
+		assert.True(t, ok, "Response data should be a slice")
+		assert.NotEmpty(t, users, "Users list should not be empty")
 	})
 
 	t.Run("Fail to get user", func(t *testing.T) {
@@ -40,17 +41,18 @@ func TestIntegrationGetUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "Missing or invalid token", response.Message)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, "Missing or invalid token", response.Error.Message)
 	})
 
 	t.Run("Login user", func(t *testing.T) {
 		setupTestUser(t)
 
-		input := ports.GetUserByEmailInput{
+		input := models.GetUserByEmailInput{
 			Email: "jhon.doe@email.com",
 		}
 		payload, err := json.Marshal(input)
@@ -61,17 +63,22 @@ func TestIntegrationGetUser(t *testing.T) {
 		recorder := httptest.NewRecorder()
 		test.Handler().ServeHTTP(recorder, req)
 
-		assert.Equal(t, http.StatusOK, recorder.Code)
+		assert.Equal(t, http.StatusCreated, recorder.Code)
 
-		var token models.Token
-		err = json.NewDecoder(recorder.Body).Decode(&token)
+		var response models.Response
+		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, token.JWT)
+		token, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Response data should be a map")
+		jwt, exists := token["jwt"]
+		assert.True(t, exists, "JWT field should exist in response data")
+		assert.NotEmpty(t, jwt, "JWT token should not be empty")
 	})
 
 	t.Run("Failed to login with invalid email", func(t *testing.T) {
-		input := ports.GetUserByEmailInput{
+		input := models.GetUserByEmailInput{
 			Email: "jhon.due@email.com",
 		}
 		payload, err := json.Marshal(input)
@@ -84,15 +91,16 @@ func TestIntegrationGetUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusNotFound, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "User not found", response.Message)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, "User not found", response.Error.Message)
 	})
 
 	t.Run("Failed to login with invalid input", func(t *testing.T) {
-		input := ports.GetUserByEmailInput{}
+		input := models.GetUserByEmailInput{}
 		payload, err := json.Marshal(input)
 		require.NoError(t, err)
 
@@ -103,14 +111,12 @@ func TestIntegrationGetUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusBadRequest, recorder.Code)
 
-		var response utils.ErrorResponse
+		var response models.Response
 		err = json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
 
-		assert.Equal(t, "Invalid input", response.Message)
-		assert.Len(t, response.Errors, 1)
-		assert.Equal(t, "Email", response.Errors[0].Field)
-		assert.Equal(t, "required", response.Errors[0].Tag)
+		assert.Equal(t, false, response.Success)
+		assert.Equal(t, "Invalid input", response.Error.Message)
 	})
 
 	t.Run("Get user with success", func(t *testing.T) {
@@ -126,10 +132,14 @@ func TestIntegrationGetUser(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, recorder.Code)
 
-		var response models.User
+		var response models.Response
 		err := json.NewDecoder(recorder.Body).Decode(&response)
 		require.NoError(t, err)
+		assert.Equal(t, true, response.Success)
 
-		assert.NotEmpty(t, response)
+		userData, ok := response.Data.(map[string]interface{})
+		assert.True(t, ok, "Response data should be a map")
+		_, exists := userData["email"]
+		assert.True(t, exists, "Email field should exist in response data")
 	})
 }
