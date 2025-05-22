@@ -1,4 +1,4 @@
-GET http://localhost:8080/api/users/all
+GET http://shorter-url.localhost/api/users/all
 
 ###
 POST http://localhost:8080/api/users

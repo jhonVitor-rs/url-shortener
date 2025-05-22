@@ -1,10 +1,29 @@
 version: "3.8"
 
 services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    # restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/traefik.yml:ro
+      # - ./letsencrypt:/letsencrypt  # Para SSL
+    networks:
+      - shorter-url
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"
+      - "traefik.http.routers.traefik.service=api@internal"
+
+
   postgres:
     image: postgres:17-alpine
-    ports:
-      - "${DATABASE_PORT:-5432}:5432"
+    container_name: postgres
     environment:
       POSTGRES_USER: "${DATABASE_USER}"
       POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
@@ -23,14 +42,13 @@ services:
 
   redis:
     image: redis:7-alpine
+    container_name: redis
     command: >
       sh -c "if [ -n \"${REDIS_PASSWORD}\" ]; then
                exec redis-server --requirepass ${REDIS_PASSWORD};
              else
                exec redis-server;
              fi"
-    ports:
-      - "6378:6379"
     volumes:
       - redis-data:/data
     networks:
@@ -45,6 +63,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: shorter-url-app
     depends_on:
       postgres:
         condition: service_healthy
@@ -58,10 +77,20 @@ services:
       DATABASE_NAME: "${DATABASE_NAME}"
       REDIS_HOST: redis:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-    ports:
-      - "8080:8080"
     networks:
       - shorter-url
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app.rule=Host(`app.localhost`) || Host(`shorter-url.localhost`)"
+      - "traefik.http.routers.app.entrypoints=web"
+      - "traefik.http.services.app.loadbalancer.server.port=8080"
+      # Middlewares para segurança
+      - "traefik.http.routers.app.middlewares=security-headers,rate-limit"
+      - "traefik.http.middlewares.security-headers.headers.frameDeny=true"
+      - "traefik.http.middlewares.security-headers.headers.browserXssFilter=true"
+      - "traefik.http.middlewares.security-headers.headers.contentTypeNosniff=true"
+      - "traefik.http.middlewares.rate-limit.ratelimit.burst=100"
+
 
 volumes:
   db:
