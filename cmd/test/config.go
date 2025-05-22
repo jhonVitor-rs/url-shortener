@@ -73,6 +73,7 @@ func Config(ctx context.Context) (*pgxpool.Pool, *redis.Client) {
 
 	_, err := pool.Exec(ctx, `
 		CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+		CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 		CREATE TABLE IF NOT EXISTS users (
 			"id" uuid PRIMARY KEY NOT NULL DEFAULT gen_random_uuid(),

@@ -18,7 +18,9 @@ COPY . .
 
 RUN go mod tidy 
 RUN chmod +x /app/wait-for-it.sh \
-  && chmod +x /app/wait-for-db.sh
+  && chmod +x /app/wait-for-db.sh \
+  && chmod +x init-multiple-dbs.sh 
+
 
 # Construir o binário Go
 RUN go build -o main ./cmd/server/main.go
