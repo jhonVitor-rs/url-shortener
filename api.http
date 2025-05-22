@@ -1,7 +1,7 @@
 GET http://shorter-url.localhost/api/users/all
 
 ###
-POST http://localhost:8080/api/users
+POST http://shorter-url.localhost/api/users
 content-type: application/json
 
 {
@@ -10,7 +10,7 @@ content-type: application/json
 }
 
 ###
-POST http://localhost:8080/api/users/login
+POST http://shorter-url.localhost/api/users/login
 content-type: aplication/json
 
 {
@@ -18,7 +18,7 @@ content-type: aplication/json
 }
 
 ###
-PATCH http://localhost:8080/api/users
+PATCH http://shorter-url.localhost/api/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
 
 {
@@ -26,11 +26,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5O
 }
 
 ###
-GET http://localhost:8080/api/short_url/list
+GET http://shorter-url.localhost/api/short_url/list
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
 
 ###
-POST http://localhost:8080/api/short_url
+POST http://shorter-url.localhost/api/short_url
 content-type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4ODksInVzZXJfaWQiOiIyNWVhYmVkMS0zYTMwLTQzOWUtOTYwOS02N2U1YWQ0MGRlY2EifQ.tebr-Sad2ZwlXjvafzQRjkC_SW1ylEyeluu54uwyF6M
 
@@ -39,7 +39,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4O
 }
 
 ###
-PATCH http://localhost:8080/api/short_url/b3f338ed-4db0-476f-8f60-a0f4c2e28d3e
+PATCH http://shorter-url.localhost/api/short_url/b3f338ed-4db0-476f-8f60-a0f4c2e28d3e
 content-type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4ODksInVzZXJfaWQiOiIyNWVhYmVkMS0zYTMwLTQzOWUtOTYwOS02N2U1YWQ0MGRlY2EifQ.tebr-Sad2ZwlXjvafzQRjkC_SW1ylEyeluu54uwyF6M
 
@@ -49,14 +49,14 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc5NDM4O
 }
 
 ###
-GET http://localhost:8080/api/short_url/33e878ee-344e-40e4-b128-e4ca084a4a7f
+GET http://shorter-url.localhost/api/short_url/33e878ee-344e-40e4-b128-e4ca084a4a7f
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDc3NzE0MzIsInVzZXJfaWQiOiIyYTdjOWFlMy00YWJkLTQ5NGMtYjQyYi1kNzY2YTlkZDEzYmEifQ.XrzbIo2HY76NQ6ksQI9hQSlAQpAlpjT2ahCwu5_b3v8
 
 ###
-DELETE http://localhost:8080/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942
+DELETE http://shorter-url.localhost/api/short_url/b9b42f89-3b50-4ccb-a587-d5a34cb35942
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68
 
 
 ###
-DELETE http://localhost:8080/api/users
+DELETE http://shorter-url.localhost/api/users
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDczMzg5ODAsInVzZXJfaWQiOiJlYTBlODI4Yi0xNGRhLTQwZmQtOTdjZS00NDA4MjYyNzc1YjQifQ.Pk0hENl9CrpbYA9gqvBbA2y-HFBMQ-Sqe1aRKdVjM68

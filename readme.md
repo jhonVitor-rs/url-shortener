@@ -106,9 +106,8 @@ A documentação interativa da API está disponível em:
 
 **Endpoints principais:**
 
-- `POST /shorten` → Cria uma nova URL encurtada.
-- `GET /{shortCode}` → Redireciona para a URL original.
-- `GET /health` → Verifica o status da aplicação.
+- `POST /short_url` → Cria uma nova URL encurtada.
+- `GET /{slug}` → Redireciona para a URL original.
 
 ---
 
